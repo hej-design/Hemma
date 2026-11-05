@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
 <style>
-/* Layout: tre alternativ sida vid sida som staplas på mobil, en tabell med egen storlekskolumn, ritningar i samma skala och kostnadsstaplar. */
+/* Layout: fyra alternativ sida vid sida som staplas på mobil, en tabell med egen storlekskolumn, ritningar i samma skala och kostnadsstaplar. */
 :root {
   --bg: #EDEFEA;
   --surface: #F8F9F6;
@@ -27,6 +27,7 @@
   --rug1: #836C5C;
   --rug2: #73574F;
   --rug3: #64543F;
+  --rug4: #6A5D4E;
   --on-rug: #FFFFFF;
   --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -35,14 +36,14 @@
   :root:not([data-theme="light"]) {
     --bg: #161917; --surface: #1F2321; --fg: #E6E9E4; --muted: #A1A8A1; --line: #323834;
     --accent: #D3B08F; --good: #8FCDA5; --good-bg: #1E3427; --ghost: #6E776F;
-    --rug1: #836C5C; --rug2: #73574F; --rug3: #64543F; --on-rug: #FFFFFF;
+    --rug1: #836C5C; --rug2: #73574F; --rug3: #64543F; --rug4: #6A5D4E; --on-rug: #FFFFFF;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #161917; --surface: #1F2321; --fg: #E6E9E4; --muted: #A1A8A1; --line: #323834;
   --accent: #D3B08F; --good: #8FCDA5; --good-bg: #1E3427; --ghost: #6E776F;
-  --rug1: #836C5C; --rug2: #73574F; --rug3: #64543F; --on-rug: #FFFFFF;
+  --rug1: #836C5C; --rug2: #73574F; --rug3: #64543F; --rug4: #6A5D4E; --on-rug: #FFFFFF;
   color-scheme: dark;
 }
 
@@ -89,7 +90,7 @@ section { display: grid; gap: 18px; }
 /* Totaler */
 .totals {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
   gap: 14px;
 }
 .tot {
@@ -208,7 +209,7 @@ thead th.size-col { background: color-mix(in srgb, var(--good-bg) 45%, var(--sur
 /* Ritningar */
 .plans {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 14px;
 }
 figure {
@@ -257,7 +258,7 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
 /* Detaljer */
 .details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 14px;
 }
 .detail {
@@ -278,7 +279,7 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
   <header>
     <p class="eyebrow">Inredning · Vardagsrum</p>
     <h1>Mattor till vardagsrummet</h1>
-    <p class="lede">Tre alternativ med samma matta i två storlekar, en vid soffan och en vid matbordet. Priserna gäller 5 november 2026.</p>
+    <p class="lede">Fyra alternativ med samma matta i två storlekar, en vid soffan och en vid matbordet. Priserna gäller 5 november 2026.</p>
   </header>
 
   <section class="totals" aria-label="Totalpris per alternativ">
@@ -341,6 +342,26 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
       </dl>
       <a href="https://www.mio.se/p/vidde-ullmatta-160x230-cm/716399?id=M2465786" target="_blank" rel="noopener">Öppna produktsidan</a>
     </article>
+
+    <article class="tot">
+      <div class="pics">
+        <img src="bilder/jofrid-miljo.jpg" alt="Jofrid Klay i ett vardagsrum, med reliefmönster i bågar" loading="eager">
+        <img src="bilder/jofrid-produkt.jpg" alt="Jofrid Klay ovanifrån med reliefmönster">
+      </div>
+      <div class="tot-top">
+        <p class="store">Alternativ 4 · Semattor</p>
+        <h2>Jofrid Klay</h2>
+        <p class="swatch-row"><span class="swatch" style="background: var(--rug4)"></span>Taupe, ull</p>
+      </div>
+      <p class="sum">5&nbsp;098<small>kr</small></p>
+      <dl>
+        <div><dt>160 × 230 cm</dt><dd>1&nbsp;599 kr</dd></div>
+        <div><dt>240 × 240 cm</dt><dd>3&nbsp;499 kr</dd></div>
+        <div><dt>Total yta</dt><dd>9,44 m²</dd></div>
+        <div><dt>Pris per m²</dt><dd>540 kr</dd></div>
+      </dl>
+      <a href="https://semattor.se/ulmatta-jofrid-klay-taupe.html" target="_blank" rel="noopener">Öppna produktsidan</a>
+    </article>
   </section>
 
   <section aria-labelledby="jamforelse">
@@ -372,7 +393,7 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
             <td class="n"><strong>10&nbsp;158 kr</strong></td>
             <td class="n">13,92 m²</td>
             <td class="n">730 kr</td>
-            <td class="size-col"><span class="chip">Fördel</span><br>Den större storleken ger mer yta, 4,24 m² mer än de andra två.</td>
+            <td class="size-col"><span class="chip">Fördel</span><br>Den större storleken ger mer yta, 4,24 m² mer än Jotex och Mio.</td>
             <td>80 % ull, 20 % bomull. Handgjord i Indien, flatvävd bubbelstruktur, cirka 25 mm.</td>
             <td>Gratis frakt och retur. Skickas inom 1–2 arbetsdagar.</td>
           </tr>
@@ -402,6 +423,19 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
             <td>100 % ull. Handknuten i Indien, låg lugg och franskant.</td>
             <td>Fraktkostnaden framgår inte av produktsidan.</td>
           </tr>
+          <tr>
+            <th scope="row">Semattor<span>Jofrid Klay, taupe</span></th>
+            <td class="sizes-cell">
+              <div><span>160 × 230</span><span>1&nbsp;599 kr</span></div>
+              <div><span>240 × 240</span><span>3&nbsp;499 kr</span></div>
+            </td>
+            <td class="n"><strong>5&nbsp;098 kr</strong></td>
+            <td class="n">9,44 m²</td>
+            <td class="n">540 kr</td>
+            <td class="size-col">160 × 230 blir precis. 240 × 240 är samma storlek som hos Trendcarpet.</td>
+            <td>95 % ull, 5 % bomull. Handvävd med reliefmönster, 7–17 mm.</td>
+            <td>Fri frakt och fri retur. Leverans 1–7 arbetsdagar. 14 dagars öppet köp.</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -410,7 +444,7 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
   <section aria-labelledby="ytor">
     <div class="section-head">
       <h2 id="ytor">Ytorna i samma skala</h2>
-      <p>Alla tre ritningar har samma skala, så storlekarna går att jämföra direkt.</p>
+      <p>Alla ritningar har samma skala, så storlekarna går att jämföra direkt.</p>
     </div>
     <div class="legend"><span><i></i>Trendcarpets storlekar som jämförelse</span></div>
     <div class="plans">
@@ -451,6 +485,19 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
         </svg>
         <figcaption><strong>Alternativ 3 · Mio</strong><span>9,68 m² totalt</span></figcaption>
       </figure>
+      <figure>
+        <svg class="plan" viewBox="0 0 620 270" role="img" aria-label="Semattor: 160 gånger 230 och 240 gånger 240 centimeter, med Trendcarpets storlekar streckade som jämförelse">
+          <rect class="ghost" x="1" y="16" width="238" height="238" rx="3"/>
+          <rect class="ghost" x="271" y="16" width="338" height="238" rx="3"/>
+          <rect x="5" y="55" width="230" height="160" rx="3" fill="var(--rug4)"/>
+          <text class="lbl" x="120" y="132" text-anchor="middle">160 × 230</text>
+          <text class="area" x="120" y="160" text-anchor="middle">3,68 m²</text>
+          <rect x="320" y="15" width="240" height="240" rx="3" fill="var(--rug4)"/>
+          <text class="lbl" x="440" y="132" text-anchor="middle">240 × 240</text>
+          <text class="area" x="440" y="160" text-anchor="middle">5,76 m²</text>
+        </svg>
+        <figcaption><strong>Alternativ 4 · Semattor</strong><span>9,44 m² totalt</span></figcaption>
+      </figure>
     </div>
   </section>
 
@@ -474,6 +521,10 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
           <div class="top"><span>Mio</span><span>9&nbsp;490 kr</span></div>
           <div class="track"><div class="fill" style="width: 93.4%; background: var(--rug3)"></div></div>
         </div>
+        <div class="bar-row">
+          <div class="top"><span>Semattor</span><span>5&nbsp;098 kr</span></div>
+          <div class="track"><div class="fill" style="width: 50.2%; background: var(--rug4)"></div></div>
+        </div>
       </div>
       <div class="bars">
         <h3>Pris per m²</h3>
@@ -488,6 +539,10 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
         <div class="bar-row">
           <div class="top"><span>Mio</span><span>980 kr</span></div>
           <div class="track"><div class="fill" style="width: 100%; background: var(--rug3)"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="top"><span>Semattor</span><span>540 kr</span></div>
+          <div class="track"><div class="fill" style="width: 55.1%; background: var(--rug4)"></div></div>
         </div>
       </div>
     </div>
@@ -514,6 +569,12 @@ svg.plan { width: 100%; height: auto; max-width: 100%; display: block; }
         <p>Handknuten i Indien av 100 % ull, med mjuk låg lugg, franskant och naturlig melering.</p>
         <p>200 × 300 väger 20 kg. Mattan är inte vändbar och har ingen gummerad undersida, och Mio tipsar om mattunderlägg och hörnvakter.</p>
         <p class="note">Betyg 5 av 5 från 6 recensioner.</p>
+      </div>
+      <div class="detail" style="border-top-color: var(--rug4)">
+        <h3>Semattor, Jofrid Klay</h3>
+        <p>Handvävd av 95 % ull och 5 % bomull, med baksida av ull och bomull. Reliefmönstret gör att tjockleken varierar mellan ungefär 7 och 17 mm.</p>
+        <p>Semattor skriver att ullmattor är känsliga för robotdammsugare, husdjur och slitage från möbler. Lösa fibrer är normalt och minskar med dammsugning, men slutar kanske inte helt. De flesta fläckar går enligt butiken bort med frottéhandduk, ljummet vatten och mild tvål.</p>
+        <p class="note">Inga betyg visas på produktsidan. Sidan visade den 5 november koden BLACKWEEKS med 15 % extra rabatt. Om den gäller dessa mattor blir paret cirka 4&nbsp;333 kr.</p>
       </div>
     </div>
   </section>
