@@ -25,15 +25,39 @@
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #141816; --surface: #1D2220; --fg: #E8EAE5; --muted: #A3AAA3; --line: #343B37;
-    --green: #8CCBA6; --green-bg: #1C3328; --red: #EAA195; --red-bg: #3A2421; --gold: #D9B36A;
-    --on-green: #10241A;
-    color-scheme: dark;
-  }
-}
+/* Sidan är alltid ljus: två foton i bakgrunden med ett vitt, genomskinligt lager över. */
+:root { color-scheme: light; }
 * { box-sizing: border-box; }
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.bg > div { background-size: cover; background-position: center; }
+.bg-a { background-image: url("bilder/stjarna.jpg"); background-position: 40% 45%; }
+.bg-b { background-image: url("bilder/bord.jpg"); background-position: 60% 40%; }
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(250, 247, 241, .70) 0%, rgba(250, 247, 241, .80) 100%);
+}
+@media (max-width: 700px) {
+  .bg { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+}
+.topbar {
+  background: rgba(255, 253, 248, .88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(221, 214, 200, .9);
+}
+.topbar-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 26px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px));
+}
 body {
   margin: 0;
   background: var(--bg);
@@ -46,9 +70,8 @@ body {
 .wrap {
   max-width: 720px;
   margin: 0 auto;
-  padding: 28px max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px));
+  padding: 24px max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px));
 }
-header { margin-bottom: 24px; }
 .eyebrow {
   margin: 0 0 6px;
   color: var(--gold);
@@ -79,10 +102,22 @@ h2 {
 .who strong { color: var(--fg); font-weight: 600; }
 .note { margin: 0 0 16px; color: var(--muted); font-size: 15px; }
 .card {
-  background: var(--surface);
+  background: rgba(255, 253, 248, .93);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 16px;
+  box-shadow: 0 2px 12px rgba(60, 45, 30, .06);
+}
+/* Rubrik och förklaring ovanför listan får en egen ljus yta så att de syns mot bilderna. */
+.panel-head {
+  background: rgba(255, 253, 248, .82);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 14px 16px 2px;
+  margin-bottom: 12px;
 }
 .stack > * + * { margin-top: 12px; }
 label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 4px; }
@@ -193,12 +228,16 @@ footer { margin-top: 32px; color: var(--muted); font-size: 14px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
+<div class="bg" aria-hidden="true"><div class="bg-a"></div><div class="bg-b"></div></div>
+<div class="veil" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="topbar-inner">
     <p class="eyebrow">Helgars Jul 2026</p>
     <h1>Önskelistor</h1>
     <p class="who" id="who" hidden></p>
-  </header>
+  </div>
+</header>
+<div class="wrap">
   <main id="app" aria-live="polite"></main>
   <footer id="footer" hidden></footer>
 </div>
@@ -597,16 +636,20 @@ function viewListor() {
 
   const panel = mine
     ? h('section', { role: 'tabpanel' },
-        h('h2', null, 'Din önskelista'),
-        h('p', { class: 'note' }, 'Det du lägger till syns direkt för de andra. Du ser aldrig vad som är köpt på din egen lista.'),
+        h('div', { class: 'panel-head' },
+          h('h2', null, 'Din önskelista'),
+          h('p', { class: 'note' }, 'Det du lägger till syns direkt för de andra. Du ser aldrig vad som är köpt på din egen lista.')
+        ),
         addForm(),
         wishes.length
           ? h('ul', { class: 'wishes' }, wishes.map(ownWish))
           : h('p', { class: 'empty' }, 'Du har inte lagt till några önskningar än.')
       )
     : h('section', { role: 'tabpanel' },
-        h('h2', null, genitive(sel) + ' önskelista'),
-        h('p', { class: 'note' }, sel + ' ser inte vad som är markerat som köpt.'),
+        h('div', { class: 'panel-head' },
+          h('h2', null, genitive(sel) + ' önskelista'),
+          h('p', { class: 'note' }, sel + ' ser inte vad som är markerat som köpt.')
+        ),
         wishes.length
           ? h('ul', { class: 'wishes' }, wishes.map(otherWish))
           : h('p', { class: 'empty' }, sel + ' har inte lagt till några önskningar än.')
