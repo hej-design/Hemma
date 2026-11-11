@@ -328,6 +328,25 @@ function safeHref(url) {
   return /^https?:\/\//i.test(url || '') ? url : '';
 }
 
+// Plockar ut själva webbadressen ur inklistrad text, till exempel en delningstext från en app:
+// "Fantastisk produkt från Zalando: … https://www.zalando.se/…". Ger '' om ingen adress finns.
+function extractUrl(text) {
+  const t = String(text || '').trim();
+  if (!t) return '';
+  const hits = t.match(/https?:\/\/[^\s<>"']+/gi) || [];
+  for (const hit of hits) {
+    try {
+      const u = new URL(hit);
+      if (u.hostname.includes('.')) return u.href;
+    } catch (e) {}
+  }
+  const words = t.split(/\s+/).filter(w => /^[^\s]+\.[a-z]{2,}(\/\S*)?$/i.test(w) && !w.includes('@'));
+  if (words.length) {
+    try { return new URL('https://' + words[words.length - 1].replace(/^https?:\/\//i, '')).href; } catch (e) {}
+  }
+  return '';
+}
+
 function domainOf(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
 }
@@ -390,7 +409,7 @@ async function load(opts) {
     state.items = res.items || [];
     state.updated = new Date();
     state.error = '';
-    if (state.view === 'kod' || state.view === 'start') state.view = state.namn ? 'listor' : 'namn';
+    if (state.view === 'kod' || state.view === 'start') state.view = 'namn';
   } catch (e) {
     if (!silent) state.error = 'Det gick inte att hämta listorna just nu. Kontrollera uppkopplingen och försök igen.';
   }
@@ -462,21 +481,33 @@ function chooseName(name) {
   render();
 }
 
+// Visas varje gång sidan öppnas, så att den som lånar någon annans telefon eller dator alltid kan välja sig själv.
 function viewNamn() {
-  const list = persons();
-  const input = h('input', { type: 'text', id: 'namn', autocomplete: 'given-name', maxlength: '60' });
+  const remembered = state.namn;
+  const others = persons().filter(p => !sameName(p, remembered));
+  const input = h('input', { type: 'text', id: 'namn', autocomplete: 'off', maxlength: '60' });
   return h('div', { class: 'card stack' },
     h('h2', null, 'Vem är du?'),
-    h('p', { class: 'note' }, 'Välj samma namn varje gång, så hamnar dina önskningar på samma lista.'),
-    list.length ? h('div', { class: 'names' },
-      list.map(p => h('button', { class: 'secondary', type: 'button', onclick: () => chooseName(p) }, p))
+    remembered
+      ? h('div', null,
+          h('button', { class: 'primary', type: 'button', onclick: () => chooseName(remembered) }, 'Fortsätt som ' + remembered)
+        )
+      : null,
+    others.length ? h('div', null,
+      h('p', { class: 'note' }, remembered ? 'Är du någon annan? Välj ditt namn:' : 'Välj ditt namn om du redan har en lista:'),
+      h('div', { class: 'names' },
+        others.map(p => h('button', { class: 'secondary', type: 'button', onclick: () => chooseName(p) }, p))
+      )
     ) : null,
     h('form', {
       class: 'stack',
       onsubmit: e => { e.preventDefault(); if (input.value.trim()) chooseName(input.value); }
     },
-      h('div', null, h('label', { for: 'namn' }, list.length ? 'Finns du inte med? Skriv ditt namn' : 'Ditt namn'), input),
-      h('button', { class: 'primary', type: 'submit' }, 'Fortsätt')
+      h('div', null,
+        h('label', { for: 'namn' }, (remembered || others.length) ? 'Ny här? Skriv ditt namn så skapas din lista' : 'Skriv ditt namn så skapas din lista'),
+        input
+      ),
+      h('button', { class: 'secondary', type: 'submit' }, 'Skapa min lista')
     )
   );
 }
@@ -500,12 +531,14 @@ function addForm() {
       e.preventDefault();
       if (state.adding) return;
       if (!d.onskan.trim()) { onskan.focus(); return; }
+      const cleanLank = extractUrl(d.lank);
+      if (d.lank.trim() && !cleanLank) { toast('Länken ser inte ut som en webbadress. Kontrollera den och försök igen.'); lank.focus(); return; }
       state.adding = true;
       const ok = await save(null, {
         action: 'add',
         person: state.namn,
         onskan: d.onskan.trim(),
-        lank: d.lank.trim(),
+        lank: cleanLank,
         kommentar: d.kommentar.trim()
       }, 'Önskningen är tillagd.');
       state.adding = false;
@@ -521,7 +554,7 @@ function addForm() {
 }
 
 function wishBody(it) {
-  const href = safeHref(it.lank);
+  const href = safeHref(extractUrl(it.lank));
   return [
     h('p', { class: 'wish-title' }, href ? h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, it.onskan) : it.onskan),
     href ? h('p', { class: 'domain' }, h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, 'Öppna länken på ' + (domainOf(href) || 'webben') + ' ↗')) : null,
@@ -558,9 +591,11 @@ function editCard(it) {
         e.preventDefault();
         if (busy) return;
         if (!d.onskan.trim()) { onskan.focus(); return; }
+        const cleanLank = extractUrl(d.lank);
+        if (d.lank.trim() && !cleanLank) { toast('Länken ser inte ut som en webbadress. Kontrollera den och försök igen.'); lank.focus(); return; }
         const ok = await save(it.id, {
           action: 'update', id: it.id,
-          onskan: d.onskan.trim(), lank: d.lank.trim(), kommentar: d.kommentar.trim()
+          onskan: d.onskan.trim(), lank: cleanLank, kommentar: d.kommentar.trim()
         }, 'Ändringen är sparad.');
         if (ok) stopEdit();
       }
@@ -691,7 +726,7 @@ function render() {
   if (state.view === 'listor' && state.namn) {
     who.hidden = false;
     who.replaceChildren('Du är ', h('strong', null, state.namn), ' · ',
-      h('button', { class: 'quiet', type: 'button', onclick: () => { state.view = 'namn'; render(); } }, 'Byt namn'));
+      h('button', { class: 'quiet', type: 'button', onclick: () => { state.view = 'namn'; render(); } }, 'Byt person'));
   } else {
     who.hidden = true;
   }
