@@ -263,6 +263,7 @@ const state = {
   kod: store.get(KEY_KOD),
   namn: store.get(KEY_NAMN),
   items: [],
+  personer: [],
   view: 'kod',
   selected: null,
   draft: { onskan: '', lank: '', kommentar: '' },
@@ -361,8 +362,9 @@ function sameName(a, b) {
 
 function persons() {
   const set = new Map();
-  for (const it of state.items) {
-    if (it.person && !set.has(it.person.toLocaleLowerCase('sv'))) set.set(it.person.toLocaleLowerCase('sv'), it.person);
+  // Sparade personer (även de utan önskningar) plus alla som har önskningar.
+  for (const p of [...state.personer, ...state.items.map(it => it.person)]) {
+    if (p && !set.has(p.toLocaleLowerCase('sv'))) set.set(p.toLocaleLowerCase('sv'), p);
   }
   if (state.namn && !set.has(state.namn.toLocaleLowerCase('sv'))) set.set(state.namn.toLocaleLowerCase('sv'), state.namn);
   const others = [...set.values()].filter(p => !sameName(p, state.namn)).sort((a, b) => a.localeCompare(b, 'sv'));
@@ -407,6 +409,7 @@ async function load(opts) {
     }
     if (!res.ok) throw new Error(res.fel || 'fel');
     state.items = res.items || [];
+    if (res.personer) state.personer = res.personer;
     state.updated = new Date();
     state.error = '';
     if (state.view === 'kod' || state.view === 'start') state.view = 'namn';
@@ -423,6 +426,7 @@ async function save(id, payload, okMsg) {
   try {
     const res = await apiPost(payload);
     if (res.items) { state.items = res.items; state.updated = new Date(); }
+    if (res.personer) state.personer = res.personer;
     if (!res.ok) {
       if (res.fel === 'kod') { store.del(KEY_KOD); state.kod = ''; state.view = 'kod'; }
       else if (res.fel === 'upptagen') toast('Någon hann före dig. Den är redan tagen.');
@@ -479,6 +483,13 @@ function chooseName(name) {
   state.selected = state.namn;
   state.view = 'listor';
   render();
+  // En ny lista sparas direkt, så att den finns kvar även innan man har lagt till något.
+  if (!state.personer.some(p => sameName(p, state.namn))) {
+    state.personer = [...state.personer, state.namn];
+    apiPost({ action: 'person', namn: state.namn })
+      .then(res => { if (res && res.personer) { state.personer = res.personer; renderSoon(); } })
+      .catch(() => {});
+  }
 }
 
 // Visas varje gång sidan öppnas, så att den som lånar någon annans telefon eller dator alltid kan välja sig själv.
