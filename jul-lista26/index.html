@@ -258,10 +258,18 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
   del(k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
+// Vem man är gäller bara under besöket (sessionen). Nästa besök får man frågan igen,
+// med förra namnet som förslag, så att den som lånar någon annans enhet inte blir fel person.
+const session = {
+  get(k) { try { return sessionStorage.getItem(k) || ''; } catch (e) { return ''; } },
+  set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+};
+const KEY_JAG = 'jul26.jag';
 
 const state = {
   kod: store.get(KEY_KOD),
-  namn: store.get(KEY_NAMN),
+  namn: session.get(KEY_JAG),
+  senaste: store.get(KEY_NAMN),
   items: [],
   personer: [],
   view: 'kod',
@@ -412,7 +420,7 @@ async function load(opts) {
     if (res.personer) state.personer = res.personer;
     state.updated = new Date();
     state.error = '';
-    if (state.view === 'kod' || state.view === 'start') state.view = 'namn';
+    if (state.view === 'kod' || state.view === 'start') state.view = state.namn ? 'listor' : 'namn';
   } catch (e) {
     if (!silent) state.error = 'Det gick inte att hämta listorna just nu. Kontrollera uppkopplingen och försök igen.';
   }
@@ -479,6 +487,8 @@ function viewKod() {
 function chooseName(name) {
   const existing = persons().find(p => sameName(p, name));
   state.namn = existing || name.trim();
+  state.senaste = state.namn;
+  session.set(KEY_JAG, state.namn);
   store.set(KEY_NAMN, state.namn);
   state.selected = state.namn;
   state.view = 'listor';
@@ -494,20 +504,21 @@ function chooseName(name) {
 
 // Visas varje gång sidan öppnas, så att den som lånar någon annans telefon eller dator alltid kan välja sig själv.
 function viewNamn() {
-  const remembered = state.namn;
+  const remembered = state.namn || state.senaste;
   const others = persons().filter(p => !sameName(p, remembered));
   const input = h('input', { type: 'text', id: 'namn', autocomplete: 'off', maxlength: '60' });
   return h('div', { class: 'card stack' },
     h('h2', null, 'Vem är du?'),
+    h('p', { class: 'note' }, 'Välj dig själv. Sedan kan du titta på allas listor och markera det du köper.'),
     remembered
       ? h('div', null,
-          h('button', { class: 'primary', type: 'button', onclick: () => chooseName(remembered) }, 'Fortsätt som ' + remembered)
+          h('button', { class: 'primary', type: 'button', onclick: () => chooseName(remembered) }, 'Jag är ' + remembered)
         )
       : null,
     others.length ? h('div', null,
-      h('p', { class: 'note' }, remembered ? 'Är du någon annan? Välj ditt namn:' : 'Välj ditt namn om du redan har en lista:'),
+      h('p', { class: 'note' }, remembered ? 'Är du någon annan?' : 'Har du redan en lista?'),
       h('div', { class: 'names' },
-        others.map(p => h('button', { class: 'secondary', type: 'button', onclick: () => chooseName(p) }, p))
+        others.map(p => h('button', { class: 'secondary', type: 'button', onclick: () => chooseName(p) }, 'Jag är ' + p))
       )
     ) : null,
     h('form', {
