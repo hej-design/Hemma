@@ -688,7 +688,7 @@ function viewListor() {
       class: 'tab', type: 'button', role: 'tab',
       'aria-selected': sameName(p, sel) ? 'true' : 'false',
       onclick: () => { state.selected = p; state.editing = null; state.confirming = null; render(); }
-    }, sameName(p, state.namn) ? 'Min lista' : p, h('span', { class: 'count' }, String(wishesOf(p).length))))
+    }, sameName(p, state.namn) ? 'Min lista' : genitive(p) + ' lista', h('span', { class: 'count' }, String(wishesOf(p).length))))
   );
 
   const panel = mine
