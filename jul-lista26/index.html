@@ -160,6 +160,9 @@ button:disabled { opacity: .55; cursor: default; }
 .danger { background: var(--red-bg); color: var(--red); }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .error { color: var(--red); font-weight: 500; margin: 8px 0 0; }
+.secondary.locked { color: var(--muted); border-style: dashed; }
+.share { margin-bottom: 16px; }
+.share input { font-size: 14px; color: var(--muted); }
 
 /* Namnval */
 .names { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -249,8 +252,9 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbxVxTQAHGXs3y-0KebcDCmm
 
 const POLL_MS = 30000;
 const TIMEOUT_MS = 20000;
-const KEY_KOD = 'jul26.kod';
-const KEY_NAMN = 'jul26.namn';
+const KEY_KOD = 'jul26.kod';        // familjekoden
+const KEY_NAMN = 'jul26.namn';      // namnet som den här telefonen är kopplad till
+const KEY_NYCKEL = 'jul26.nyckel';  // osynlig nyckel som bevisar att telefonen hör till namnet
 
 // Webbläsarens lagring kan saknas eller vara avstängd; sidan ska fungera ändå.
 const store = {
@@ -258,21 +262,33 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
   del(k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
-// Vem man är gäller bara under besöket (sessionen). Nästa besök får man frågan igen,
-// med förra namnet som förslag, så att den som lånar någon annans enhet inte blir fel person.
-const session = {
-  get(k) { try { return sessionStorage.getItem(k) || ''; } catch (e) { return ''; } },
-  set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
-};
-const KEY_JAG = 'jul26.jag';
+
+// En länk från "Använd på en annan enhet" bär med sig familjekod, namn och nyckel efter #.
+// Delen efter # skickas aldrig till någon server. Den sparas och tas sedan bort ur adressfältet.
+(function importDevice() {
+  const m = location.hash.match(/^#enhet=(.+)$/);
+  if (!m) return;
+  try {
+    const [kod, namn, nyckel] = JSON.parse(decodeURIComponent(m[1]));
+    if (kod && namn && nyckel) {
+      store.set(KEY_KOD, kod);
+      store.set(KEY_NAMN, namn);
+      store.set(KEY_NYCKEL, nyckel);
+    }
+  } catch (e) {}
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+})();
 
 const state = {
   kod: store.get(KEY_KOD),
-  namn: session.get(KEY_JAG),
-  senaste: store.get(KEY_NAMN),
+  namn: store.get(KEY_NYCKEL) ? store.get(KEY_NAMN) : '',
+  nyckel: store.get(KEY_NYCKEL),
   items: [],
   personer: [],
   view: 'kod',
+  confirmFor: null,
+  confirmError: '',
+  showShare: false,
   selected: null,
   draft: { onskan: '', lank: '', kommentar: '' },
   adding: false,
@@ -304,13 +320,70 @@ function apiGet(kod) {
   return request(API_URL + (API_URL.includes('?') ? '&' : '?') + 'kod=' + encodeURIComponent(kod));
 }
 
+// Varje förfrågan skickar med vem man är och telefonens nyckel. Servern kontrollerar båda.
 function apiPost(payload) {
   // text/plain gör att webbläsaren skickar direkt utan förfrågan i förväg, vilket Apps Script kräver.
   return request(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(Object.assign({ kod: state.kod }, payload))
+    body: JSON.stringify(Object.assign({ kod: state.kod, namn: state.namn, nyckel: state.nyckel }, payload))
   });
+}
+
+/* ---------- Inloggning ---------- */
+
+function newKey() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function saveLogin(namn, nyckel) {
+  state.namn = namn;
+  state.nyckel = nyckel;
+  store.set(KEY_NAMN, namn);
+  store.set(KEY_NYCKEL, nyckel);
+}
+
+// Används bara om nyckeln inte längre gäller, till exempel när Maria har nollställt ett namn.
+function forget(message) {
+  state.namn = '';
+  state.nyckel = '';
+  store.del(KEY_NAMN);
+  store.del(KEY_NYCKEL);
+  state.items = [];
+  state.selected = null;
+  state.editing = null;
+  state.editDraft = null;
+  state.confirming = null;
+  state.confirmFor = null;
+  state.showShare = false;
+  state.view = 'namn';
+  state.error = message || '';
+}
+
+function wrongCode() {
+  store.del(KEY_KOD);
+  state.kod = '';
+  state.view = 'kod';
+  state.error = 'Koden stämmer inte. Kontrollera stavningen och försök igen.';
+}
+
+// Fel som betyder att telefonen inte längre är kopplad. Ger true om felet är hanterat.
+function handleAuthError(fel) {
+  if (fel === 'kod') { wrongCode(); return true; }
+  if (fel === 'fel_nyckel' || fel === 'ingennyckel' || fel === 'nyckelformat') {
+    forget('Den här telefonen är inte längre kopplad till ditt namn. Välj ditt namn igen.');
+    return true;
+  }
+  return false;
+}
+
+function applyData(res) {
+  if (res.items) state.items = res.items;
+  if (res.personer) state.personer = res.personer;
+  if (res.namn && state.namn && !sameName(res.namn, state.namn)) return;
+  if (res.namn) state.namn = res.namn;
 }
 
 /* ---------- Hjälpare ---------- */
@@ -368,10 +441,14 @@ function sameName(a, b) {
   return String(a).trim().toLocaleLowerCase('sv') === String(b).trim().toLocaleLowerCase('sv');
 }
 
+function personInfo(namn) {
+  return state.personer.find(p => sameName(p.namn, namn));
+}
+
 function persons() {
   const set = new Map();
-  // Sparade personer (även de utan önskningar) plus alla som har önskningar.
-  for (const p of [...state.personer, ...state.items.map(it => it.person)]) {
+  // Alla som har skapat en lista plus alla som har önskningar.
+  for (const p of [...state.personer.map(x => x.namn), ...state.items.map(it => it.person)]) {
     if (p && !set.has(p.toLocaleLowerCase('sv'))) set.set(p.toLocaleLowerCase('sv'), p);
   }
   if (state.namn && !set.has(state.namn.toLocaleLowerCase('sv'))) set.set(state.namn.toLocaleLowerCase('sv'), state.namn);
@@ -403,24 +480,31 @@ function timeStr(d) {
 async function load(opts) {
   const silent = opts && opts.silent;
   if (!API_URL || !state.kod) return;
+  const entering = state.view === 'kod' || state.view === 'start';
   if (!silent) { state.loading = true; state.error = ''; render(); }
   try {
-    const res = await apiGet(state.kod);
-    if (!res.ok && res.fel === 'kod') {
-      store.del(KEY_KOD);
-      state.kod = '';
-      state.view = 'kod';
-      state.error = 'Koden stämmer inte. Kontrollera stavningen och försök igen.';
-      state.loading = false;
-      render();
-      return;
+    // Familjekoden kontrolleras och namnen hämtas. Önskningar visas bara för den som är inloggad.
+    if (entering || !state.namn || !state.nyckel) {
+      const pub = await apiGet(state.kod);
+      if (!pub.ok) {
+        if (pub.fel === 'kod') { wrongCode(); state.loading = false; render(); return; }
+        throw new Error(pub.fel || 'fel');
+      }
+      state.personer = pub.personer || [];
     }
-    if (!res.ok) throw new Error(res.fel || 'fel');
-    state.items = res.items || [];
-    if (res.personer) state.personer = res.personer;
+    if (state.namn && state.nyckel) {
+      const res = await apiPost({ action: 'list' });
+      if (!res.ok) {
+        if (handleAuthError(res.fel)) { state.loading = false; render(); return; }
+        throw new Error(res.fel || 'fel');
+      }
+      applyData(res);
+      if (entering) { state.view = 'listor'; state.selected = state.namn; }
+    } else if (entering) {
+      state.view = 'namn';
+    }
     state.updated = new Date();
     state.error = '';
-    if (state.view === 'kod' || state.view === 'start') state.view = state.namn ? 'listor' : 'namn';
   } catch (e) {
     if (!silent) state.error = 'Det gick inte att hämta listorna just nu. Kontrollera uppkopplingen och försök igen.';
   }
@@ -433,12 +517,14 @@ async function save(id, payload, okMsg) {
   render();
   try {
     const res = await apiPost(payload);
-    if (res.items) { state.items = res.items; state.updated = new Date(); }
-    if (res.personer) state.personer = res.personer;
+    applyData(res);
+    if (res.items) state.updated = new Date();
     if (!res.ok) {
-      if (res.fel === 'kod') { store.del(KEY_KOD); state.kod = ''; state.view = 'kod'; }
-      else if (res.fel === 'upptagen') toast('Någon hann före dig. Den är redan tagen.');
+      if (handleAuthError(res.fel)) return false;
+      if (res.fel === 'upptagen') toast('Någon hann före dig. Den är redan tagen.');
       else if (res.fel === 'saknas') toast('Önskningen finns inte längre.');
+      else if (res.fel === 'behorighet') toast('Du kan bara ändra din egen lista.');
+      else if (res.fel === 'egen') toast('Du kan inte markera dina egna önskningar.');
       else toast('Det gick inte att spara. Försök igen.');
       return false;
     }
@@ -484,52 +570,126 @@ function viewKod() {
   return form;
 }
 
-function chooseName(name) {
-  const existing = persons().find(p => sameName(p, name));
-  state.namn = existing || name.trim();
-  state.senaste = state.namn;
-  session.set(KEY_JAG, state.namn);
-  store.set(KEY_NAMN, state.namn);
-  state.selected = state.namn;
-  state.view = 'listor';
+function openConfirm(namn) {
+  const info = personInfo(namn);
+  state.confirmFor = { namn: info ? info.namn : namn, kopplad: !!(info && info.kopplad) };
+  state.confirmError = '';
+  state.error = '';
+  state.view = 'bekrafta';
   render();
-  // En ny lista sparas direkt, så att den finns kvar även innan man har lagt till något.
-  if (!state.personer.some(p => sameName(p, state.namn))) {
-    state.personer = [...state.personer, state.namn];
-    apiPost({ action: 'person', namn: state.namn })
-      .then(res => { if (res && res.personer) { state.personer = res.personer; renderSoon(); } })
-      .catch(() => {});
-  }
 }
 
-// Visas varje gång sidan öppnas, så att den som lånar någon annans telefon eller dator alltid kan välja sig själv.
+function newName(raw) {
+  const namn = String(raw || '').trim().replace(/\s+/g, ' ');
+  if (!namn) return;
+  const existing = persons().find(p => sameName(p, namn));
+  openConfirm(existing || namn);
+}
+
+// Man väljer sig själv en gång. Sedan är namnet kopplat till telefonen och ingen annan kan välja det.
 function viewNamn() {
-  const remembered = state.namn || state.senaste;
-  const others = persons().filter(p => !sameName(p, remembered));
+  const names = persons();
   const input = h('input', { type: 'text', id: 'namn', autocomplete: 'off', maxlength: '60' });
   return h('div', { class: 'card stack' },
     h('h2', null, 'Vem är du?'),
-    h('p', { class: 'note' }, 'Välj dig själv. Sedan kan du titta på allas listor och markera det du köper.'),
-    remembered
-      ? h('div', null,
-          h('button', { class: 'primary', type: 'button', onclick: () => chooseName(remembered) }, 'Jag är ' + remembered)
-        )
-      : null,
-    others.length ? h('div', null,
-      h('p', { class: 'note' }, remembered ? 'Är du någon annan?' : 'Har du redan en lista?'),
+    h('p', { class: 'note' }, 'Välj dig själv. Ditt namn kopplas till den här telefonen, så att ingen annan kan använda det.'),
+    state.error ? h('p', { class: 'error', role: 'alert' }, state.error) : null,
+    names.length ? h('div', null,
+      h('p', { class: 'note' }, 'Har du redan en lista?'),
       h('div', { class: 'names' },
-        others.map(p => h('button', { class: 'secondary', type: 'button', onclick: () => chooseName(p) }, 'Jag är ' + p))
+        names.map(p => {
+          const info = personInfo(p);
+          const locked = !!(info && info.kopplad);
+          return h('button', { class: 'secondary' + (locked ? ' locked' : ''), type: 'button', onclick: () => openConfirm(p) },
+            'Jag är ' + p, locked ? h('span', { class: 'sr-only' }, ' (redan kopplad)') : null);
+        })
       )
     ) : null,
     h('form', {
       class: 'stack',
-      onsubmit: e => { e.preventDefault(); if (input.value.trim()) chooseName(input.value); }
+      onsubmit: e => { e.preventDefault(); newName(input.value); }
     },
       h('div', null,
-        h('label', { for: 'namn' }, (remembered || others.length) ? 'Ny här? Skriv ditt namn så skapas din lista' : 'Skriv ditt namn så skapas din lista'),
+        h('label', { for: 'namn' }, names.length ? 'Ny här? Skriv ditt namn så skapas din lista' : 'Skriv ditt namn så skapas din lista'),
         input
       ),
       h('button', { class: 'secondary', type: 'submit' }, 'Skapa min lista')
+    )
+  );
+}
+
+function viewConfirm() {
+  const { namn, kopplad } = state.confirmFor;
+  const back = h('button', { class: 'secondary', type: 'button', onclick: () => { state.confirmFor = null; state.view = 'namn'; render(); } }, 'Tillbaka');
+  if (kopplad) {
+    return h('div', { class: 'card stack' },
+      h('h2', null, namn + ' används redan'),
+      h('p', { class: 'note' }, 'Namnet ' + namn + ' är redan kopplat till en annan telefon.'),
+      h('p', { class: 'note' }, 'Är det du och har du kvar den telefonen? Öppna sidan där och tryck på "Använd på en annan enhet", så får du en länk.'),
+      h('p', { class: 'note' }, 'Har du bytt telefon? Be Maria nollställa ditt namn, så kan du välja det igen.'),
+      h('div', { class: 'row' }, back)
+    );
+  }
+  return h('div', { class: 'card stack' },
+    h('h2', null, 'Är du ' + namn + '?'),
+    h('p', { class: 'note' }, 'Ditt namn kopplas till den här telefonen. Sedan kan ingen annan använda det, och du behöver ingen kod.'),
+    state.confirmError ? h('p', { class: 'error', role: 'alert' }, state.confirmError) : null,
+    h('div', { class: 'row' },
+      h('button', { class: 'primary', type: 'button', disabled: state.loading, onclick: async () => {
+        if (state.loading) return;
+        state.loading = true;
+        state.confirmError = '';
+        render();
+        const nyckel = newKey();
+        try {
+          const res = await apiPost({ action: 'register', namn, nyckel });
+          if (res.ok) {
+            saveLogin(res.namn || namn, nyckel);
+            applyData(res);
+            state.updated = new Date();
+            state.confirmFor = null;
+            state.view = 'listor';
+            state.selected = state.namn;
+          } else if (res.fel === 'upptaget') {
+            if (res.personer) state.personer = res.personer;
+            state.confirmFor = { namn, kopplad: true };
+          } else if (res.fel === 'kod') {
+            wrongCode();
+          } else {
+            state.confirmError = 'Något gick fel. Försök igen.';
+          }
+        } catch (err) {
+          state.confirmError = 'Det gick inte att nå listorna. Kontrollera uppkopplingen och försök igen.';
+        }
+        state.loading = false;
+        render();
+      } }, state.loading ? 'Kopplar …' : 'Ja, det är jag'),
+      back
+    )
+  );
+}
+
+// Länk för att använda samma namn på ytterligare en telefon eller dator.
+function shareLink() {
+  return location.origin + location.pathname + '#enhet=' + encodeURIComponent(JSON.stringify([state.kod, state.namn, state.nyckel]));
+}
+
+function viewShare() {
+  const link = shareLink();
+  const out = h('input', { type: 'text', id: 'delalank', value: link, readonly: true });
+  return h('div', { class: 'card stack share' },
+    h('h2', null, 'Använd på en annan enhet'),
+    h('p', { class: 'note' }, 'Öppna den här länken på din andra telefon eller dator. Dela den inte med någon annan, för den som har länken kan använda ditt namn.'),
+    out,
+    h('div', { class: 'row' },
+      navigator.share ? h('button', { class: 'primary', type: 'button', onclick: () => {
+        navigator.share({ title: 'Önskelistor', url: link }).catch(() => {});
+      } }, 'Skicka länken till dig själv') : null,
+      h('button', { class: navigator.share ? 'secondary' : 'primary', type: 'button', onclick: async () => {
+        try { await navigator.clipboard.writeText(link); toast('Länken är kopierad.'); }
+        catch (e) { out.select(); toast('Markera och kopiera länken.'); }
+      } }, 'Kopiera länken'),
+      h('button', { class: 'secondary', type: 'button', onclick: () => { state.showShare = false; render(); } }, 'Stäng')
     )
   );
 }
@@ -558,7 +718,6 @@ function addForm() {
       state.adding = true;
       const ok = await save(null, {
         action: 'add',
-        person: state.namn,
         onskan: d.onskan.trim(),
         lank: cleanLank,
         kommentar: d.kommentar.trim()
@@ -660,13 +819,13 @@ function otherWish(it) {
   let status;
   if (!it.kopsAv) {
     status = h('button', { class: 'primary', type: 'button', disabled: busy, onclick: () =>
-      save(it.id, { action: 'reserve', id: it.id, namn: state.namn }, 'Markerad. ' + it.person + ' kan inte se det.')
+      save(it.id, { action: 'reserve', id: it.id }, 'Markerad. ' + it.person + ' kan inte se det.')
     }, busy ? 'Markerar …' : 'Jag köper den');
   } else if (sameName(it.kopsAv, state.namn)) {
     status = [
       h('span', { class: 'badge mine' }, 'Du köper den'),
       h('button', { class: 'quiet', type: 'button', disabled: busy, onclick: () =>
-        save(it.id, { action: 'unreserve', id: it.id, namn: state.namn }, 'Markeringen är borttagen.')
+        save(it.id, { action: 'unreserve', id: it.id }, 'Markeringen är borttagen.')
       }, busy ? 'Ångrar …' : 'Ångra')
     ];
   } else {
@@ -712,7 +871,7 @@ function viewListor() {
           : h('p', { class: 'empty' }, sel + ' har inte lagt till några önskningar än.')
       );
 
-  return h('div', null, tabs, panel);
+  return h('div', null, state.showShare ? viewShare() : null, tabs, panel);
 }
 
 /* ---------- Rendering ---------- */
@@ -741,14 +900,15 @@ function render() {
         h('p', { class: 'error', role: 'alert' }, state.error),
         h('button', { class: 'primary', type: 'button', onclick: () => load() }, 'Försök igen'))
     : h('p', { class: 'note' }, 'Hämtar listorna …');
-  else if (state.view === 'namn' || !state.namn) view = viewNamn();
+  else if (state.view === 'bekrafta' && state.confirmFor) view = viewConfirm();
+  else if (state.view === 'namn' || !state.namn || !state.nyckel) view = viewNamn();
   else view = viewListor();
   app.replaceChildren(view);
 
   if (state.view === 'listor' && state.namn) {
     who.hidden = false;
     who.replaceChildren('Du är ', h('strong', null, state.namn), ' · ',
-      h('button', { class: 'quiet', type: 'button', onclick: () => { state.view = 'namn'; render(); } }, 'Byt person'));
+      h('button', { class: 'quiet', type: 'button', onclick: () => { state.showShare = !state.showShare; render(); window.scrollTo(0, 0); } }, 'Använd på en annan enhet'));
   } else {
     who.hidden = true;
   }
