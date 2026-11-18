@@ -90,7 +90,7 @@ a:focus-visible,button:focus-visible,input:focus-visible+label{outline:2px solid
 .s-ok{background:var(--good-soft);color:var(--good)}
 .s-warn{background:var(--warn-soft);color:var(--warn)}
 .s-bad{background:var(--bad-soft);color:var(--bad)}
-.s-unknown{background:var(--unk-soft);color:var(--unk)}
+.s-book{background:var(--accent-soft);color:var(--accent)}
 .specs{display:flex;flex-wrap:wrap;gap:6px}
 .note{font-size:.9rem}
 .req-ok{color:var(--good);font-weight:600;font-size:.88rem}
@@ -120,7 +120,7 @@ a:focus-visible,button:focus-visible,input:focus-visible+label{outline:2px solid
     <h2 id="rec-h">Bosch Serie 6 WGG244ZTSN hos Elgiganten</h2>
     <p>Samma tillverkare, mått och förbrukning som Siemens iQ500, men 995 kr billigare. Den har 10 års motorgaranti och kortast leveranstid.</p>
     <p class="num">5 993 kr med inbärning och bortforsling. 5 294 kr om ni bär in själva.</p>
-    <p class="meta">Billigaste alternativet som klarar alla krav är LG F4A1009NWK hos WhiteAway för 3 990 kr, men den är något högljuddare.</p>
+    <p class="meta">Billigast om ni bär in själva är LG F4A1009NWK hos WhiteAway för 3 990 kr. Med inbärning och bortforsling blir TCL P5 hos Elgiganten billigast för 4 993 kr, men det är ett klubbpris.</p>
   </section>
 
   <section class="tool" aria-labelledby="tool-h">
@@ -188,15 +188,15 @@ const MODES = {
 const STORES = {
   elg: {
     name: 'Elgiganten',
-    self:    { parts: [['Leverans till tomtgräns 8–17', 299], ['Gamla till återvinningscentral', 0]], from: false, time: '1–2 dagar enligt Pricerunner', state: 'ok' },
-    carry:   { parts: [['Leverans med inbärning', 649], ['Bortforsling', 349]], from: false, time: 'Ej bekräftad med inbärning', state: 'unknown' },
-    install: { parts: [['Leverans med inbärning', 649], ['Installation', 799], ['Bortforsling', 349]], from: false, time: 'Ej bekräftad med installation', state: 'unknown' }
+    self:    { parts: [['Leverans till tomtgräns 8–17', 299], ['Gamla till återvinningscentral', 0]], from: false, time: '1–2 dagar. 349 kr i stället för 299 kr om ni väljer dag och tid', state: 'ok' },
+    carry:   { parts: [['Leverans med inbärning', 649], ['Bortforsling', 349]], from: false, time: 'Ni väljer dag och tidsfönster i kassan', state: 'book' },
+    install: { parts: [['Leverans med inbärning', 649], ['Installation', 799], ['Bortforsling', 349]], from: false, time: 'Ni väljer dag och tidsfönster i kassan', state: 'book' }
   },
   wa: {
     name: 'WhiteAway-gruppen',
     self:    { parts: [['Leverans till tomtgräns', 0], ['Gamla till återvinningscentral', 0]], from: false, time: 'Skickas inom 1–3 vardagar', state: 'ok' },
-    carry:   { parts: [['Bärhjälp', 749], ['Bortforsling', 449]], from: true, time: 'Ej angiven. Tillägg kan ge 3–9 vardagar extra', state: 'warn' },
-    install: { parts: [['Inbärning och installation', 1475], ['Bortforsling', 449]], from: true, time: '4–10 vardagar', state: 'bad' }
+    carry:   { parts: [['Bärhjälp', 749], ['Bortforsling', 449]], from: true, time: 'Tilläggstjänster ger 3–9 vardagar extra enligt villkoren', state: 'warn' },
+    install: { parts: [['Inbärning och installation', 1475], ['Bortforsling', 449]], from: true, time: '4–10 vardagar enligt kassan', state: 'bad' }
   }
 };
 
@@ -217,9 +217,9 @@ const MACHINES = [
     motor: 'SilentPowerDrive, ingen motorgaranti hittad', req: true,
     note: 'Enklare utrustning än Serie 6, men dyrare. Iron Assist.',
     link: 'https://www.tretti.se/sp/tvattmaskiner-bosch/' },
-  { id: 'tcl', name: 'TCL P5 FP1154WA1NE', shop: 'Elgiganten, klubbpris', store: 'elg', assumed: true, price: 3995, kg: 11, rpm: 1400, energy: 'A', db: 72,
+  { id: 'tcl', name: 'TCL P5 FP1154WA1NE', shop: 'Elgiganten, klubbpris', store: 'elg', price: 3995, kg: 11, rpm: 1400, energy: 'A', db: 72,
     motor: 'Invertermotor', req: true,
-    note: 'Klubbpriset kräver medlemskap. 62 cm djup. Kortare historik som vitvarumärke i Sverige.',
+    note: 'Klubbpriset kräver medlemskap hos Elgiganten. 62 cm djup. Kortare historik som vitvarumärke i Sverige.',
     link: 'https://www.elgiganten.se/brand/tcl' },
   { id: 'siemens', name: 'Siemens iQ500 WG44G2ZPDN', shop: null, price: 5990, kg: 9, rpm: 1400, energy: 'A', db: null,
     motor: '10 års motorgaranti vid registrering', req: true,
@@ -236,7 +236,7 @@ const MACHINES = [
 ];
 
 const kr = n => n.toLocaleString('sv-SE') + ' kr';
-const STATE_LABEL = { ok: 'Snabb', warn: 'Osäker', bad: 'Lång', unknown: 'Okänd' };
+const STATE_LABEL = { ok: 'Snabb', warn: 'Längre', bad: 'Lång', book: 'Bokas' };
 
 function costFor(m, mode) {
   if (!m.store) return null;
@@ -272,8 +272,8 @@ function render(mode) {
   l2.innerHTML = '<strong>Rekommenderad:</strong> Bosch Serie 6, <span class="num">' + kr(bosch.c.total) + '</span>, ' + (bosch.c.total - cheapest.c.total > 0 ? '<span class="num">' + kr(bosch.c.total - cheapest.c.total) + '</span> mer' : 'billigast');
   const timeNote = {
     self: 'Leveranstid: 1–2 dagar hos Elgiganten och 1–3 vardagar hos WhiteAway-gruppen.',
-    carry: 'Leveranstiden med inbärning är inte bekräftad. WhiteAway-gruppen anger att tilläggstjänster kan ge 3–9 vardagar extra.',
-    install: 'Med installation tar WhiteAway-gruppen 4–10 vardagar. Elgigantens leveranstid är inte bekräftad.'
+    carry: 'Hos Elgiganten väljer ni dag och tidsfönster i kassan. Hos WhiteAway-gruppen ger tilläggstjänster 3–9 vardagar extra enligt villkoren.',
+    install: 'Hos Elgiganten väljer ni dag och tidsfönster i kassan. WhiteAway-gruppen anger 4–10 vardagar i kassan.'
   }[mode];
   const l3 = el('div', 'meta', timeNote);
   sum.append(l1, l2, l3);
@@ -285,12 +285,12 @@ function render(mode) {
     const head = el('div', 'head');
     const name = el('div', 'name');
     name.append(el('h3', null, m.name));
-    name.append(el('span', 'meta', m.shop ? m.shop : 'Butik ej bekräftad'));
+    name.append(el('span', 'meta', m.shop ? m.shop : 'Butik saknas i underlaget'));
     const badges = el('div', 'badges');
     if (m.rec) badges.append(el('span', 'badge b-rec', 'Rekommenderas'));
     if (cheapest && m.id === cheapest.m.id) badges.append(el('span', 'badge b-cheap', 'Billigast'));
     if (m.assumed) badges.append(el('span', 'badge b-assume', 'Avgifter antagna'));
-    if (!c) badges.append(el('span', 'badge b-unk', 'Ej bekräftad'));
+    if (!c) badges.append(el('span', 'badge b-unk', 'Butik okänd'));
     if (badges.childNodes.length) name.append(badges);
 
     const total = el('div', 'total');
@@ -312,7 +312,7 @@ function render(mode) {
       t.append(el('span', null, c.time));
       card.append(t);
     } else {
-      card.append(el('div', 'breakdown', 'Pris från er Prisjakt-lista. Butik, leveransavgift och leveranstid är inte bekräftade.'));
+      card.append(el('div', 'breakdown', 'Pris från er Prisjakt-lista. Öppna produkten i Prisjakt för att se butik, frakt och leveranstid.'));
     }
 
     const specs = el('div', 'specs');
