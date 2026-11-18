@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ny tvättmaskin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: en kolumn, verktyg överst (val av leverans), sedan kort per maskin sorterade på totalkostnad */
+:root{
+  --bg:#f3f5f7;
+  --surface:#ffffff;
+  --ink:#16222c;
+  --muted:#5a6a77;
+  --line:#dbe2e8;
+  --accent:#0d5c88;
+  --accent-soft:#e2edf4;
+  --good:#1d7449; --good-soft:#e1f1e8;
+  --warn:#8f5c00; --warn-soft:#faefd9;
+  --bad:#ad3029; --bad-soft:#f8e2df;
+  --unk:#4f5d69; --unk-soft:#eaeef1;
+  --font-display:'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-body:'IBM Plex Sans', 'Segoe UI', Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11171c; --surface:#1a2229; --ink:#e7edf2; --muted:#9aaab6; --line:#2b3640;
+    --accent:#6fb4dc; --accent-soft:#1d3342;
+    --good:#6fcf9b; --good-soft:#173326; --warn:#e9b65c; --warn-soft:#3a2c12;
+    --bad:#f08a80; --bad-soft:#3b1d1a; --unk:#aab6c0; --unk-soft:#24303a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11171c; --surface:#1a2229; --ink:#e7edf2; --muted:#9aaab6; --line:#2b3640;
+  --accent:#6fb4dc; --accent-soft:#1d3342;
+  --good:#6fcf9b; --good-soft:#173326; --warn:#e9b65c; --warn-soft:#3a2c12;
+  --bad:#f08a80; --bad-soft:#3b1d1a; --unk:#aab6c0; --unk-soft:#24303a;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:1.75rem}
+h2{font-size:1.15rem}
+h3{font-size:1.05rem}
+p{margin:0}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+.meta{color:var(--muted);font-size:.9rem}
+.num{font-variant-numeric:tabular-nums}
+
+.rec{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.rec .label{font-size:.8rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+
+.reqs{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.82rem;padding:3px 9px;border-radius:999px;background:var(--unk-soft);color:var(--ink);white-space:nowrap}
+
+.tool{display:flex;flex-direction:column;gap:10px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:flex;align-items:center;justify-content:center;text-align:center;padding:10px 6px;border-radius:7px;font-weight:600;font-size:.92rem;cursor:pointer;color:var(--muted);min-height:44px}
+.seg input:checked+label{background:var(--accent);color:var(--surface)}
+.mode-desc{font-size:.92rem;color:var(--muted)}
+.summary{background:var(--accent-soft);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:.95rem}
+
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card.dim{opacity:.92}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.head .name{display:flex;flex-direction:column;gap:2px;min-width:0}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:999px}
+.b-rec{background:var(--accent);color:var(--surface)}
+.b-cheap{background:var(--good-soft);color:var(--good)}
+.b-unk{background:var(--unk-soft);color:var(--unk)}
+.b-assume{background:var(--warn-soft);color:var(--warn)}
+.total{text-align:right;flex-shrink:0}
+.total .sum{font-family:var(--font-display);font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.total .sub{font-size:.78rem;color:var(--muted)}
+.breakdown{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.time{display:flex;align-items:center;gap:8px;font-size:.9rem}
+.pill{font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.s-ok{background:var(--good-soft);color:var(--good)}
+.s-warn{background:var(--warn-soft);color:var(--warn)}
+.s-bad{background:var(--bad-soft);color:var(--bad)}
+.s-unknown{background:var(--unk-soft);color:var(--unk)}
+.specs{display:flex;flex-wrap:wrap;gap:6px}
+.note{font-size:.9rem}
+.req-ok{color:var(--good);font-weight:600;font-size:.88rem}
+.req-unk{color:var(--warn);font-weight:600;font-size:.88rem}
+.link{font-size:.9rem;font-weight:600}
+
+.section{display:flex;flex-direction:column;gap:10px}
+.section p{max-width:65ch}
+.sources{font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+@media (max-width:400px){
+  .head{flex-direction:column}
+  .total{text-align:left}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <h1>Ny tvättmaskin</h1>
+    <p class="meta">Priser 18 november 2026. De flesta är kampanjpriser som gäller till och med 30 november.</p>
+  </header>
+
+  <section class="rec" aria-labelledby="rec-h">
+    <span class="label">Rekommendation</span>
+    <h2 id="rec-h">Bosch Serie 6 WGG244ZTSN hos Elgiganten</h2>
+    <p>Samma tillverkare, mått och förbrukning som Siemens iQ500, men 995 kr billigare. Den har 10 års motorgaranti och kortast leveranstid.</p>
+    <p class="num">5 993 kr med inbärning och bortforsling. 5 294 kr om ni bär in själva.</p>
+    <p class="meta">Billigaste alternativet som klarar alla krav är LG F4A1009NWK hos WhiteAway för 3 990 kr, men den är något högljuddare.</p>
+  </section>
+
+  <section class="tool" aria-labelledby="tool-h">
+    <h2 id="tool-h">Välj hur maskinen ska komma på plats</h2>
+    <div class="seg" role="radiogroup" aria-label="Leveranssätt">
+      <input type="radio" name="mode" id="mode-self" value="self">
+      <label for="mode-self">Bär själva</label>
+      <input type="radio" name="mode" id="mode-carry" value="carry" checked>
+      <label for="mode-carry">Inbärning</label>
+      <input type="radio" name="mode" id="mode-install" value="install">
+      <label for="mode-install">Installation</label>
+    </div>
+    <p class="mode-desc" id="mode-desc"></p>
+    <div class="summary" id="summary" aria-live="polite"></div>
+  </section>
+
+  <section class="list" id="list" aria-label="Maskiner"></section>
+
+  <section class="section" aria-labelledby="krav-h">
+    <h2 id="krav-h">Era krav</h2>
+    <div class="reqs">
+      <span class="chip">Energiklass A</span>
+      <span class="chip">Frontmatad</span>
+      <span class="chip">Minst 1 200 v/min</span>
+      <span class="chip">230 V</span>
+      <span class="chip">Minst 7 kg</span>
+    </div>
+    <p>Sju av åtta maskiner uppfyller kraven. För Electrolux EFI621WX7W hittades inget datablad.</p>
+  </section>
+
+  <section class="section" aria-labelledby="tank-h">
+    <h2 id="tank-h">Att tänka på</h2>
+    <p><strong>Två säljare.</strong> Tretti, WhiteAway och Skousen ingår alla i WhiteAway Group. De har samma kassa, samma villkor och samma priser för tilläggstjänster.</p>
+    <p><strong>Leveransdatum.</strong> Kontrollera datumet i kassan innan ni betalar. Med installation tar WhiteAway-gruppen 4–10 vardagar.</p>
+    <p><strong>Elgigantens leverans till tomtgräns.</strong> 299 kr om de kommer någon gång mellan 8 och 17. Väljer ni dag och tid själva kostar det 349 kr.</p>
+    <p><strong>Installera själva.</strong> Ta bort transportskruvarna på baksidan före första tvätten. Skruva fast vattenslangen på kranen, koppla in avloppsslangen och ställ maskinen plant. Kör sedan en handduk på ett bomullsprogram. Behöver något i rören, avloppet eller uttaget ändras ska en fackman göra det.</p>
+    <p><strong>Mått.</strong> Bosch och Siemens är 84,5 cm höga och 58,8 cm djupa, och TCL är 62 cm djup. Mät utrymmet under bänkskivan.</p>
+    <p><strong>Gamla maskinen.</strong> Ni kan lämna den utan kostnad på återvinningscentralen eller i någon av Elgigantens butiker. Hos WhiteAway-gruppen ska den vara frånkopplad och tömd om den ska hämtas.</p>
+    <p><strong>Motorgaranti.</strong> För att få motorgarantin på Siemens behöver ni registrera maskinen i My Siemens inom 6 månader.</p>
+  </section>
+
+  <section class="sources" aria-labelledby="src-h">
+    <h3 id="src-h">Källor</h3>
+    <span>Priser: er Prisjakt-lista, butikernas kassor 18 november och Pricerunner (<a href="https://www.pricerunner.se/pl/14-3325831840/Tvaettmaskiner/Bosch-Series-6-WGG244ZTSN-Vit-priser">Bosch Serie 6</a>, <a href="https://www.pricerunner.se/pl/14-3208466469/Tvaettmaskiner/LG-F4Y5EYP6W0F-Vit-priser">LG F4Y5EYP6W0F</a>, <a href="https://www.pricerunner.se/pl/14-3391531291/Tvaettmaskiner/LG-F4A1009NWK-Tvaettmaskin-Vit-priser">LG F4A1009NWK</a>, <a href="https://www.pricerunner.se/pl/14-3457619012/Tvaettmaskiner/Bosch-WAN2829WSN-Serie-4-Tvaettmaskin-priser">Bosch Serie 4</a>).</span>
+    <span>Datablad: <a href="https://media3.bsh-group.com/Documents/specsheet/sv-SE/WGG244ZTSN.pdf">Bosch Serie 6</a>, <a href="https://media3.bsh-group.com/Documents/specsheet/sv-SE/WG44G2ZPDN.pdf">Siemens iQ500</a>, <a href="https://media3.bsh-group.com/Documents/specsheet/sv-SE/WAN2829WSN.pdf">Bosch Serie 4</a>, <a href="https://www.electrolux.dk/laundry/laundry/washing-machines/front-loader-washing-machine/efi621w84w/">Electrolux EFI621W84W</a>, <a href="https://www.elkjop.no/document/dv_doc_D18000147626/1054200/tcl-p5-vaskemaskin-fp1154wa1ne-11kg.PDF">TCL P5</a>, <a href="https://www.lg.com/no/vaskemaskiner/lg-f4y5eyp6w0f">LG F4Y5EYP6W0F</a>.</span>
+    <span>Leverans och installation: <a href="https://www.elgiganten.se/kundtjanst/leverans/leverans-och-installationsavtal">Elgiganten</a>, <a href="https://www.tretti.se/pb/leveransinformation/">Tretti</a>, <a href="https://www.whiteaway.se/leveransinformation/">WhiteAway</a>, <a href="https://www.elgiganten.se/magazine/vitvaror/tvattmaskin/guide-har-du-ocksa-gjort-den-har-tvattmaskinstabben">Elgigantens installationsguide</a>.</span>
+    <span>Ägarförhållanden: <a href="https://app.dealroom.co/companies/whiteaway">Dealroom</a>, <a href="https://www.realtid.se/bors-finans/qliro-saljer-tretti-till-whiteaway/">Realtid</a>.</span>
+  </section>
+
+</main>
+
+<script>
+const MODES = {
+  self: {
+    desc: 'Leverans till tomtgräns eller port. Ni bär in maskinen själva och lämnar den gamla på återvinningscentralen.',
+  },
+  carry: {
+    desc: 'Leverans in i bostaden och bortforsling av den gamla maskinen. Installationen gör ni själva.',
+  },
+  install: {
+    desc: 'Leverans in i bostaden, installation och bortforsling av den gamla maskinen.',
+  }
+};
+
+const STORES = {
+  elg: {
+    name: 'Elgiganten',
+    self:    { parts: [['Leverans till tomtgräns 8–17', 299], ['Gamla till återvinningscentral', 0]], from: false, time: '1–2 dagar enligt Pricerunner', state: 'ok' },
+    carry:   { parts: [['Leverans med inbärning', 649], ['Bortforsling', 349]], from: false, time: 'Ej bekräftad med inbärning', state: 'unknown' },
+    install: { parts: [['Leverans med inbärning', 649], ['Installation', 799], ['Bortforsling', 349]], from: false, time: 'Ej bekräftad med installation', state: 'unknown' }
+  },
+  wa: {
+    name: 'WhiteAway-gruppen',
+    self:    { parts: [['Leverans till tomtgräns', 0], ['Gamla till återvinningscentral', 0]], from: false, time: 'Skickas inom 1–3 vardagar', state: 'ok' },
+    carry:   { parts: [['Bärhjälp', 749], ['Bortforsling', 449]], from: true, time: 'Ej angiven. Tillägg kan ge 3–9 vardagar extra', state: 'warn' },
+    install: { parts: [['Inbärning och installation', 1475], ['Bortforsling', 449]], from: true, time: '4–10 vardagar', state: 'bad' }
+  }
+};
+
+const MACHINES = [
+  { id: 'bosch6', name: 'Bosch Serie 6 WGG244ZTSN', shop: 'Elgiganten', store: 'elg', price: 4995, kg: 9, rpm: 1400, energy: 'A', db: 71,
+    motor: 'EcoSilence Drive, 10 års motorgaranti', rec: true, req: true,
+    note: 'Samma maskin som Siemens iQ500 för 995 kr mindre. Iron Assist med ånga och påfyllning under tvätt.',
+    link: 'https://www.elgiganten.se/product/vitvaror/tvatt-tork/tvattmaskin/bosch-serie-6-tvattmaskin-wgg244ztsn-9kg/764454' },
+  { id: 'lgf4a', name: 'LG F4A1009NWK', shop: 'WhiteAway', store: 'wa', price: 3990, kg: 9, rpm: 1400, energy: 'A', db: 74,
+    motor: 'Motortyp ej angiven', req: true,
+    note: 'Billigast. Något högljuddare än Bosch Serie 6 vid centrifugering.',
+    link: 'https://www.whiteaway.se/vitvaror/tvattmaskin/frontmatad-tvattmaskin/product/lg-f4a1009nwk/' },
+  { id: 'lgf4y5', name: 'LG F4Y5EYP6W0F', shop: 'Tretti eller WhiteAway', store: 'wa', price: 5490, kg: 11, rpm: 1400, energy: 'A', db: 71,
+    motor: 'Direktdriven motor (AI DD)', req: true,
+    note: 'Störst trumma, klarar täcken och stora tvättar. Ångprogram.',
+    link: 'https://www.tretti.se/vitvaror/tvattmaskin/frontmatad-tvattmaskin/product/lg-f4y5eyp6w0f/' },
+  { id: 'bosch4', name: 'Bosch Serie 4 WAN2829WSN', shop: 'Tretti', store: 'wa', price: 5490, kg: 9, rpm: 1400, energy: 'A', db: null,
+    motor: 'SilentPowerDrive, ingen motorgaranti hittad', req: true,
+    note: 'Enklare utrustning än Serie 6, men dyrare. Iron Assist.',
+    link: 'https://www.tretti.se/sp/tvattmaskiner-bosch/' },
+  { id: 'tcl', name: 'TCL P5 FP1154WA1NE', shop: 'Elgiganten, klubbpris', store: 'elg', assumed: true, price: 3995, kg: 11, rpm: 1400, energy: 'A', db: 72,
+    motor: 'Invertermotor', req: true,
+    note: 'Klubbpriset kräver medlemskap. 62 cm djup. Kortare historik som vitvarumärke i Sverige.',
+    link: 'https://www.elgiganten.se/brand/tcl' },
+  { id: 'siemens', name: 'Siemens iQ500 WG44G2ZPDN', shop: null, price: 5990, kg: 9, rpm: 1400, energy: 'A', db: null,
+    motor: '10 års motorgaranti vid registrering', req: true,
+    note: 'Efterträdare till er nuvarande Siemens. Hos Bygghemma kostar den 6 990 kr plus frakt från 159 kr, med 2–5 vardagars leverans.',
+    link: 'https://www.bygghemma.se/kok-och-bad/vitvaror/tvattmaskin/frontmatad-tvattmaskin/frontmatad-tvattmaskin-siemens-wg44g2zpdn-iq500-med-kolborstfri-motor/p-1917174' },
+  { id: 'elux84', name: 'Electrolux EFI621W84W', shop: null, price: 4990, kg: 8, rpm: 1400, energy: 'A', db: 75,
+    motor: 'Invertermotor+', req: true,
+    note: 'Minst trumma och högst ljudnivå i jämförelsen.',
+    link: 'https://www.netonnet.se/art/vitvaror/tvattmaskin/frontmatad-tvattmaskin/electrolux-efi621w84w/1052886.17968/' },
+  { id: 'eluxx7', name: 'Electrolux EFI621WX7W', shop: null, price: 4990, kg: null, rpm: null, energy: null, db: null,
+    motor: null, req: null,
+    note: 'Ny modell från augusti 2026. Inget datablad hittades, så kraven kan inte bekräftas.',
+    link: null }
+];
+
+const kr = n => n.toLocaleString('sv-SE') + ' kr';
+const STATE_LABEL = { ok: 'Snabb', warn: 'Osäker', bad: 'Lång', unknown: 'Okänd' };
+
+function costFor(m, mode) {
+  if (!m.store) return null;
+  const s = STORES[m.store][mode];
+  const fees = s.parts.reduce((a, p) => a + p[1], 0);
+  return { total: m.price + fees, fees, parts: s.parts, from: s.from, time: s.time, state: s.state };
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function render(mode) {
+  document.getElementById('mode-desc').textContent = MODES[mode].desc;
+
+  const rows = MACHINES.map(m => ({ m, c: costFor(m, mode) }));
+  const byTotal = (a, b) => a.c.total - b.c.total;
+  const confirmed = rows.filter(r => r.c && !r.m.assumed).sort(byTotal);
+  const assumed = rows.filter(r => r.c && r.m.assumed).sort(byTotal);
+  const known = [...confirmed, ...assumed];
+  const unknown = rows.filter(r => !r.c).sort((a, b) => a.m.price - b.m.price);
+  const cheapest = confirmed[0];
+  const bosch = known.find(r => r.m.id === 'bosch6');
+
+  const sum = document.getElementById('summary');
+  sum.innerHTML = '';
+  const l1 = el('div');
+  l1.innerHTML = '<strong>Billigast:</strong> ' + cheapest.m.name + ', ' + (cheapest.c.from ? 'från ' : '') + '<span class="num">' + kr(cheapest.c.total) + '</span>';
+  const l2 = el('div');
+  l2.innerHTML = '<strong>Rekommenderad:</strong> Bosch Serie 6, <span class="num">' + kr(bosch.c.total) + '</span>, ' + (bosch.c.total - cheapest.c.total > 0 ? '<span class="num">' + kr(bosch.c.total - cheapest.c.total) + '</span> mer' : 'billigast');
+  const timeNote = {
+    self: 'Leveranstid: 1–2 dagar hos Elgiganten och 1–3 vardagar hos WhiteAway-gruppen.',
+    carry: 'Leveranstiden med inbärning är inte bekräftad. WhiteAway-gruppen anger att tilläggstjänster kan ge 3–9 vardagar extra.',
+    install: 'Med installation tar WhiteAway-gruppen 4–10 vardagar. Elgigantens leveranstid är inte bekräftad.'
+  }[mode];
+  const l3 = el('div', 'meta', timeNote);
+  sum.append(l1, l2, l3);
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  [...known, ...unknown].forEach(({ m, c }) => {
+    const card = el('article', 'card' + (c ? '' : ' dim'));
+    const head = el('div', 'head');
+    const name = el('div', 'name');
+    name.append(el('h3', null, m.name));
+    name.append(el('span', 'meta', m.shop ? m.shop : 'Butik ej bekräftad'));
+    const badges = el('div', 'badges');
+    if (m.rec) badges.append(el('span', 'badge b-rec', 'Rekommenderas'));
+    if (cheapest && m.id === cheapest.m.id) badges.append(el('span', 'badge b-cheap', 'Billigast'));
+    if (m.assumed) badges.append(el('span', 'badge b-assume', 'Avgifter antagna'));
+    if (!c) badges.append(el('span', 'badge b-unk', 'Ej bekräftad'));
+    if (badges.childNodes.length) name.append(badges);
+
+    const total = el('div', 'total');
+    if (c) {
+      total.append(el('div', 'sum', (c.from ? 'från ' : '') + kr(c.total)));
+      total.append(el('div', 'sub', 'totalt'));
+    } else {
+      total.append(el('div', 'sum', 'minst ' + kr(m.price)));
+      total.append(el('div', 'sub', 'utan leverans'));
+    }
+    head.append(name, total);
+    card.append(head);
+
+    if (c) {
+      const parts = ['Maskin ' + kr(m.price)].concat(c.parts.filter(p => p[1] > 0 || p[0].startsWith('Leverans')).map(p => p[0] + ' ' + (c.from && p[1] > 0 ? 'från ' : '') + kr(p[1])));
+      card.append(el('div', 'breakdown', parts.join(' + ')));
+      const t = el('div', 'time');
+      t.append(el('span', 'pill s-' + c.state, STATE_LABEL[c.state]));
+      t.append(el('span', null, c.time));
+      card.append(t);
+    } else {
+      card.append(el('div', 'breakdown', 'Pris från er Prisjakt-lista. Butik, leveransavgift och leveranstid är inte bekräftade.'));
+    }
+
+    const specs = el('div', 'specs');
+    if (m.kg) specs.append(el('span', 'chip', m.kg + ' kg'));
+    if (m.rpm) specs.append(el('span', 'chip', m.rpm.toLocaleString('sv-SE') + ' v/min'));
+    if (m.energy) specs.append(el('span', 'chip', 'Energiklass ' + m.energy));
+    if (m.db) specs.append(el('span', 'chip', m.db + ' dB'));
+    if (m.motor) specs.append(el('span', 'chip', m.motor));
+    if (specs.childNodes.length) card.append(specs);
+
+    card.append(el('div', m.req ? 'req-ok' : 'req-unk', m.req ? 'Klarar alla krav' : 'Kraven kan inte bekräftas'));
+    card.append(el('p', 'note', m.note));
+
+    if (m.link) {
+      const a = el('a', 'link', 'Öppna produktsidan');
+      a.href = m.link;
+      a.rel = 'noopener';
+      card.append(a);
+    }
+    list.append(card);
+  });
+}
+
+document.querySelectorAll('input[name="mode"]').forEach(r => {
+  r.addEventListener('change', e => render(e.target.value));
+});
+render(document.querySelector('input[name="mode"]:checked').value);
+</script>
+</body>
+</html>
