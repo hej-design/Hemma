@@ -148,7 +148,7 @@ a:focus-visible,button:focus-visible,input:focus-visible+label{outline:2px solid
       <span class="chip">230 V</span>
       <span class="chip">Minst 7 kg</span>
     </div>
-    <p>Sju av åtta maskiner uppfyller kraven. För Electrolux EFI621WX7W hittades inget datablad.</p>
+    <p>Sju av åtta maskiner uppfyller kraven. För Electrolux EFI621WX7W anger butiken inte kapaciteten, och den finns inte i lager förrän 30 november.</p>
   </section>
 
   <section class="section" aria-labelledby="tank-h">
@@ -164,7 +164,7 @@ a:focus-visible,button:focus-visible,input:focus-visible+label{outline:2px solid
 
   <section class="sources" aria-labelledby="src-h">
     <h3 id="src-h">Källor</h3>
-    <span>Priser: er Prisjakt-lista, butikernas kassor 18 november och Pricerunner (<a href="https://www.pricerunner.se/pl/14-3325831840/Tvaettmaskiner/Bosch-Series-6-WGG244ZTSN-Vit-priser">Bosch Serie 6</a>, <a href="https://www.pricerunner.se/pl/14-3208466469/Tvaettmaskiner/LG-F4Y5EYP6W0F-Vit-priser">LG F4Y5EYP6W0F</a>, <a href="https://www.pricerunner.se/pl/14-3391531291/Tvaettmaskiner/LG-F4A1009NWK-Tvaettmaskin-Vit-priser">LG F4A1009NWK</a>, <a href="https://www.pricerunner.se/pl/14-3457619012/Tvaettmaskiner/Bosch-WAN2829WSN-Serie-4-Tvaettmaskin-priser">Bosch Serie 4</a>).</span>
+    <span>Priser: butikernas sidor och kassor 18 november, <a href="https://www.siemens-home.bsh-group.com/se/sv/product/tvatt-och-tork/tvattmaskin/frontmatad-tvattmaskin/WG44G2ZPDN">Siemens webbutik</a>, <a href="https://www.tretti.se/vitvaror/tvattmaskin/frontmatad-tvattmaskin/product/electrolux-efi621wx7w/">Tretti (EFI621WX7W)</a> och Pricerunner (<a href="https://www.pricerunner.se/pl/14-3403500775/Tvaettmaskiner/Siemens-WG44G2ZPDN-priser">Siemens iQ500</a>, <a href="https://www.pricerunner.se/pl/14-3391531099/Tvaettmaskiner/Electrolux-EFI621W84W-Tvaettmaskin-Vit-priser">Electrolux EFI621W84W</a>, <a href="https://www.pricerunner.se/pl/14-3325831840/Tvaettmaskiner/Bosch-Series-6-WGG244ZTSN-Vit-priser">Bosch Serie 6</a>, <a href="https://www.pricerunner.se/pl/14-3208466469/Tvaettmaskiner/LG-F4Y5EYP6W0F-Vit-priser">LG F4Y5EYP6W0F</a>, <a href="https://www.pricerunner.se/pl/14-3391531291/Tvaettmaskiner/LG-F4A1009NWK-Tvaettmaskin-Vit-priser">LG F4A1009NWK</a>, <a href="https://www.pricerunner.se/pl/14-3457619012/Tvaettmaskiner/Bosch-WAN2829WSN-Serie-4-Tvaettmaskin-priser">Bosch Serie 4</a>).</span>
     <span>Datablad: <a href="https://media3.bsh-group.com/Documents/specsheet/sv-SE/WGG244ZTSN.pdf">Bosch Serie 6</a>, <a href="https://media3.bsh-group.com/Documents/specsheet/sv-SE/WG44G2ZPDN.pdf">Siemens iQ500</a>, <a href="https://media3.bsh-group.com/Documents/specsheet/sv-SE/WAN2829WSN.pdf">Bosch Serie 4</a>, <a href="https://www.electrolux.dk/laundry/laundry/washing-machines/front-loader-washing-machine/efi621w84w/">Electrolux EFI621W84W</a>, <a href="https://www.elkjop.no/document/dv_doc_D18000147626/1054200/tcl-p5-vaskemaskin-fp1154wa1ne-11kg.PDF">TCL P5</a>, <a href="https://www.lg.com/no/vaskemaskiner/lg-f4y5eyp6w0f">LG F4Y5EYP6W0F</a>.</span>
     <span>Leverans och installation: <a href="https://www.elgiganten.se/kundtjanst/leverans/leverans-och-installationsavtal">Elgiganten</a>, <a href="https://www.tretti.se/pb/leveransinformation/">Tretti</a>, <a href="https://www.whiteaway.se/leveransinformation/">WhiteAway</a>, <a href="https://www.elgiganten.se/magazine/vitvaror/tvattmaskin/guide-har-du-ocksa-gjort-den-har-tvattmaskinstabben">Elgigantens installationsguide</a>.</span>
     <span>Ägarförhållanden: <a href="https://app.dealroom.co/companies/whiteaway">Dealroom</a>, <a href="https://www.realtid.se/bors-finans/qliro-saljer-tretti-till-whiteaway/">Realtid</a>.</span>
@@ -191,6 +191,12 @@ const STORES = {
     self:    { parts: [['Leverans till tomtgräns 8–17', 299], ['Gamla till återvinningscentral', 0]], from: false, time: '1–2 dagar. 349 kr i stället för 299 kr om ni väljer dag och tid', state: 'ok' },
     carry:   { parts: [['Leverans med inbärning', 649], ['Bortforsling', 349]], from: false, time: '2 dagar enligt kassan', state: 'ok' },
     install: { parts: [['Leverans med inbärning', 649], ['Installation', 799], ['Bortforsling', 349]], from: false, time: 'Ni väljer dag och tidsfönster i kassan', state: 'book' }
+  },
+  siemens: {
+    name: 'Siemens webbutik',
+    self:    { parts: [['Leverans till tomtgräns', 0], ['Gamla till återvinningscentral', 0]], from: false, time: '2–4 arbetsdagar', state: 'ok' },
+    carry:   null,
+    install: null
   },
   wa: {
     name: 'WhiteAway-gruppen',
@@ -221,18 +227,19 @@ const MACHINES = [
     motor: 'Invertermotor', req: true,
     note: 'Klubbpriset kräver medlemskap hos Elgiganten. 62 cm djup. Kortare historik som vitvarumärke i Sverige.',
     link: 'https://www.elgiganten.se/brand/tcl' },
-  { id: 'siemens', name: 'Siemens iQ500 WG44G2ZPDN', shop: null, price: 5990, kg: 9, rpm: 1400, energy: 'A', db: null,
+  { id: 'siemens', name: 'Siemens iQ500 WG44G2ZPDN', shop: 'Siemens webbutik', store: 'siemens', price: 5990, kg: 9, rpm: 1400, energy: 'A', db: null,
     motor: '10 års motorgaranti vid registrering', req: true,
-    note: 'Efterträdare till er nuvarande Siemens. Hos Bygghemma kostar den 6 990 kr plus frakt från 159 kr, med 2–5 vardagars leverans.',
-    link: 'https://www.bygghemma.se/kok-och-bad/vitvaror/tvattmaskin/frontmatad-tvattmaskin/frontmatad-tvattmaskin-siemens-wg44g2zpdn-iq500-med-kolborstfri-motor/p-1917174' },
-  { id: 'elux84', name: 'Electrolux EFI621W84W', shop: null, price: 4990, kg: 8, rpm: 1400, energy: 'A', db: 75,
+    note: 'Efterträdare till er nuvarande Siemens. Priset gäller till 29 november, och Siemens har just nu en cashback-kampanj. Inbärning och bortforsling syns inte på produktsidan.',
+    link: 'https://www.siemens-home.bsh-group.com/se/sv/product/tvatt-och-tork/tvattmaskin/frontmatad-tvattmaskin/WG44G2ZPDN' },
+  { id: 'elux84', name: 'Electrolux EFI621W84W', shop: 'Tretti', store: 'wa', price: 4990, kg: 8, rpm: 1400, energy: 'A', db: 75,
     motor: 'Invertermotor+', req: true,
     note: 'Minst trumma och högst ljudnivå i jämförelsen.',
-    link: 'https://www.netonnet.se/art/vitvaror/tvattmaskin/frontmatad-tvattmaskin/electrolux-efi621w84w/1052886.17968/' },
-  { id: 'eluxx7', name: 'Electrolux EFI621WX7W', shop: null, price: 4990, kg: null, rpm: null, energy: null, db: null,
-    motor: null, req: null,
-    note: 'Ny modell från augusti 2026. Inget datablad hittades, så kraven kan inte bekräftas.',
-    link: null }
+    link: 'https://www.pricerunner.se/pl/14-3391531099/Tvaettmaskiner/Electrolux-EFI621W84W-Tvaettmaskin-Vit-priser' },
+  { id: 'eluxx7', name: 'Electrolux EFI621WX7W', shop: 'Tretti', store: 'wa', price: 4990, kg: null, rpm: 1400, energy: 'A', db: 76,
+    motor: 'Kolborstfri motor', req: null,
+    timeOverride: { time: 'Ej i lager, väntas 30 november', state: 'bad' },
+    note: 'Ny modell. Butiken anger inte kapaciteten. 63,6 cm djup och högst ljudnivå i jämförelsen.',
+    link: 'https://www.tretti.se/vitvaror/tvattmaskin/frontmatad-tvattmaskin/product/electrolux-efi621wx7w/' }
 ];
 
 const kr = n => n.toLocaleString('sv-SE') + ' kr';
@@ -241,8 +248,11 @@ const STATE_LABEL = { ok: 'Snabb', warn: 'Längre', bad: 'Lång', book: 'Bokas' 
 function costFor(m, mode) {
   if (!m.store) return null;
   const s = STORES[m.store][mode];
+  if (!s) return null;
   const fees = s.parts.reduce((a, p) => a + p[1], 0);
-  return { total: m.price + fees, fees, parts: s.parts, from: s.from, time: s.time, state: s.state };
+  const time = m.timeOverride ? m.timeOverride.time : s.time;
+  const state = m.timeOverride ? m.timeOverride.state : s.state;
+  return { total: m.price + fees, fees, parts: s.parts, from: s.from, time, state };
 }
 
 function el(tag, cls, text) {
@@ -290,7 +300,7 @@ function render(mode) {
     if (m.rec) badges.append(el('span', 'badge b-rec', 'Rekommenderas'));
     if (cheapest && m.id === cheapest.m.id) badges.append(el('span', 'badge b-cheap', 'Billigast'));
     if (m.assumed) badges.append(el('span', 'badge b-assume', 'Avgifter antagna'));
-    if (!c) badges.append(el('span', 'badge b-unk', 'Butik okänd'));
+    if (!c) badges.append(el('span', 'badge b-unk', 'Tjänsten saknas'));
     if (badges.childNodes.length) name.append(badges);
 
     const total = el('div', 'total');
@@ -299,7 +309,7 @@ function render(mode) {
       total.append(el('div', 'sub', 'totalt'));
     } else {
       total.append(el('div', 'sum', 'minst ' + kr(m.price)));
-      total.append(el('div', 'sub', 'utan leverans'));
+      total.append(el('div', 'sub', 'utan tillval'));
     }
     head.append(name, total);
     card.append(head);
@@ -312,7 +322,7 @@ function render(mode) {
       t.append(el('span', null, c.time));
       card.append(t);
     } else {
-      card.append(el('div', 'breakdown', 'Pris från er Prisjakt-lista. Öppna produkten i Prisjakt för att se butik, frakt och leveranstid.'));
+      card.append(el('div', 'breakdown', 'Fri leverans till tomtgräns på 2–4 arbetsdagar. Inbärning, installation och bortforsling erbjuds inte på produktsidan.'));
     }
 
     const specs = el('div', 'specs');
@@ -323,7 +333,7 @@ function render(mode) {
     if (m.motor) specs.append(el('span', 'chip', m.motor));
     if (specs.childNodes.length) card.append(specs);
 
-    card.append(el('div', m.req ? 'req-ok' : 'req-unk', m.req ? 'Klarar alla krav' : 'Kraven kan inte bekräftas'));
+    card.append(el('div', m.req ? 'req-ok' : 'req-unk', m.req ? 'Klarar alla krav' : 'Kapaciteten anges inte'));
     card.append(el('p', 'note', m.note));
 
     if (m.link) {
