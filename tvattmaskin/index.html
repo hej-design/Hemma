@@ -189,7 +189,7 @@ const STORES = {
   elg: {
     name: 'Elgiganten',
     self:    { parts: [['Leverans till tomtgräns 8–17', 299], ['Gamla till återvinningscentral', 0]], from: false, time: '1–2 dagar. 349 kr i stället för 299 kr om ni väljer dag och tid', state: 'ok' },
-    carry:   { parts: [['Leverans med inbärning', 649], ['Bortforsling', 349]], from: false, time: 'Ni väljer dag och tidsfönster i kassan', state: 'book' },
+    carry:   { parts: [['Leverans med inbärning', 649], ['Bortforsling', 349]], from: false, time: '2 dagar enligt kassan', state: 'ok' },
     install: { parts: [['Leverans med inbärning', 649], ['Installation', 799], ['Bortforsling', 349]], from: false, time: 'Ni väljer dag och tidsfönster i kassan', state: 'book' }
   },
   wa: {
@@ -272,7 +272,7 @@ function render(mode) {
   l2.innerHTML = '<strong>Rekommenderad:</strong> Bosch Serie 6, <span class="num">' + kr(bosch.c.total) + '</span>, ' + (bosch.c.total - cheapest.c.total > 0 ? '<span class="num">' + kr(bosch.c.total - cheapest.c.total) + '</span> mer' : 'billigast');
   const timeNote = {
     self: 'Leveranstid: 1–2 dagar hos Elgiganten och 1–3 vardagar hos WhiteAway-gruppen.',
-    carry: 'Hos Elgiganten väljer ni dag och tidsfönster i kassan. Hos WhiteAway-gruppen ger tilläggstjänster 3–9 vardagar extra enligt villkoren.',
+    carry: 'Elgiganten levererar med inbärning inom 2 dagar. Hos WhiteAway-gruppen ger tilläggstjänster 3–9 vardagar extra enligt villkoren.',
     install: 'Hos Elgiganten väljer ni dag och tidsfönster i kassan. WhiteAway-gruppen anger 4–10 vardagar i kassan.'
   }[mode];
   const l3 = el('div', 'meta', timeNote);
