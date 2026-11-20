@@ -1,0 +1,33 @@
+name: Hämta produktbilder till högtalarsidan
+
+on:
+  push:
+    branches: [hogtalare-sladd]
+    paths: [".github/workflows/hamta-bilder.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  hamta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hogtalare-sladd
+      - name: Ladda ner bilderna
+        run: |
+          mkdir -p hogtalare/bilder
+          UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          H="Accept: image/jpeg,image/png,image/*;q=0.8"
+          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/sonos-era-100-sl.img "https://next-media.elkjop.com/image/dv_web_D18000138372177/1045678/sonos-era-100-sl-bluetooth-hogtalare-vit.jpg?w=1000&q=80"
+          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/homepod-mini-2.img "https://next-media.elkjop.com/image/dv_web_D180001463182/1154159/apple-homepod-mini-2-hogtalare-white.jpg?w=1000&q=80"
+          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/homepod.img "https://www.kjell.com/cdn-cgi/image/segment=foreground,width=1000,format=jpeg/globalassets/productimages/877079_24571.jpg?ref=EB05CFA950"
+          file hogtalare/bilder/*
+      - name: Spara bilderna i grenen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hogtalare/bilder
+          git commit -m "Lägg till produktbilder för sladdbundna högtalare" || echo "Inga nya bilder"
+          git push origin hogtalare-sladd
