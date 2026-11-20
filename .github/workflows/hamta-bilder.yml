@@ -1,0 +1,33 @@
+name: Hämta produktbilder till högtalarsidan
+
+on:
+  push:
+    branches: [hogtalare]
+    paths: [".github/workflows/hamta-bilder.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  hamta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hogtalare
+      - name: Ladda ner bilderna
+        run: |
+          mkdir -p hogtalare/bilder
+          UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          curl -fsSL -A "$UA" -H "Accept: image/jpeg,image/png,image/*;q=0.8" -o hogtalare/bilder/sonos-play.jpg "https://media.sonos.com/images/znqtjj88/production/8475f628fc4ba407afd0e77f143ca2a666d35e29-2880x1920.jpg?w=1200&q=80&fit=clip&fm=jpg"
+          curl -fsSL -A "$UA" -H "Accept: image/jpeg,image/png,image/*;q=0.8" -o hogtalare/bilder/kreafunk-acoustic.jpg "https://kreafunk.com/cdn/shop/files/aCOUSTIC2024IvorySandSide.jpg?v=1755069067&width=1000"
+          curl -fsSL -A "$UA" -H "Accept: image/jpeg,image/png,image/*;q=0.8" -o hogtalare/bilder/jbl-flip-7.img "https://www.kjell.com/cdn-cgi/image/segment=foreground,width=1000,format=jpeg/globalassets/productimages/912844_24595.webp?ref=3861D3E886"
+          curl -fsSL -A "$UA" -H "Accept: image/jpeg,image/png,image/*;q=0.8" -o hogtalare/bilder/kreafunk-karl.jpg "https://img.bygghemma.se/82b291fd-85a8-45c6-a9a3-fc233db40eb6/KFRX11.jpg.jpg?fm=jpg&w=1000&h=1000&q=75"
+          file hogtalare/bilder/*
+      - name: Spara bilderna i grenen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hogtalare/bilder
+          git commit -m "Lägg till produktbilder för högtalarsidan" || echo "Inga nya bilder"
+          git push origin hogtalare
