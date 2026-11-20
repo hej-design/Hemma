@@ -20,10 +20,10 @@ jobs:
           mkdir -p hogtalare/bilder
           UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
           H="Accept: image/jpeg,image/png,image/*;q=0.8"
-          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/sonos-era-100-sl.img "https://next-media.elkjop.com/image/dv_web_D18000138372177/1045678/sonos-era-100-sl-bluetooth-hogtalare-vit.jpg?w=1000&q=80"
-          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/homepod-mini-2.img "https://next-media.elkjop.com/image/dv_web_D180001463182/1154159/apple-homepod-mini-2-hogtalare-white.jpg?w=1000&q=80"
-          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/homepod.img "https://www.kjell.com/cdn-cgi/image/segment=foreground,width=1000,format=jpeg/globalassets/productimages/877079_24571.jpg?ref=EB05CFA950"
-          file hogtalare/bilder/*
+          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/sonos-era-100-sl.img "https://www.elgiganten.se/image/dv_web_D18000138372177/1045678/sonos-era-100-sl-bluetooth-hogtalare-vit.jpg" || echo "Era misslyckades"
+          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/homepod-mini-2.img "https://www.elgiganten.se/image/dv_web_D180001463182/1154159/apple-homepod-mini-2-hogtalare-white.jpg" || echo "mini 2 misslyckades"
+          curl -fsSL -A "$UA" -H "$H" -o hogtalare/bilder/homepod.img "https://www.kjell.com/cdn-cgi/image/segment=foreground,width=1000,format=jpeg/globalassets/productimages/877079_24571.jpg?ref=EB05CFA950" || echo "HomePod misslyckades"
+          file hogtalare/bilder/* || true
       - name: Spara bilderna i grenen
         run: |
           git config user.name "github-actions[bot]"
