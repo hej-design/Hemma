@@ -28,16 +28,19 @@ jobs:
           ogbild() {
             curl -fsSL -A "$UA" "$1" 2>/dev/null | grep -oE '<meta[^>]+og:image[^>]+>' | grep -oE 'content="[^"]+"' | head -1 | sed 's/content="//;s/"$//' | sed 's/&amp;/\&/g'
           }
-          g="https://lh3.googleusercontent.com/lMBHQyLSQg9IrUKBHOzTgF-iPqP9qPpWbe3MWO_cNZeZcWomvcHQxq1OrCd5isLZTfNuoxy5vmle3YvvenTaDxDHdrz_sVyktAgR"
-          hamta "gstor-1" "$g=s0"
-          hamta "gstor-2" "$g=w1400"
-          hamta "gstor-3" "$g=w1200-h600-rw"
-          curl -fsSL -A "$UA" "https://store.google.com/se/product/google_home_speaker?hl=sv" | grep -oE 'lMBHQyLSQg9IrUKBHOzTgF[^"'"'"' ]{0,200}' | head -5 || true
-          file hogtalare/bilder/gstor-* || true
+          n=0
+          for sida in \
+            "https://www.kjell.com/se/varumarken/google/smarta-hem/smarta-hogtalare/google-home-speaker-smart-hogtalare-med-gemini-porcelain-p52067" \
+            "https://www.currys.co.uk/products/google-home-speaker-2026-porcelain-10291566.html" \
+            "https://www.johnlewis.com/google-home-bluetooth-wi-fi-speaker-with-gemini/porcelain/p114921742" \
+            "https://www.argos.co.uk/product/7795222"; do
+            n=$((n+1)); u=$(ogbild "$sida"); echo "og $n: $u"; [ -n "$u" ] && hamta "gpor-$n" "$u"
+          done
+          file hogtalare/bilder/gpor-* || true
       - name: Spara bilderna i grenen
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add hogtalare/bilder
-          git commit -m "Lägg till större bild på Google Home Speaker" || echo "Inga nya bilder"
+          git commit -m "Lägg till produktbilder på Google Home Speaker" || echo "Inga nya bilder"
           git push origin hogtalare-fler
