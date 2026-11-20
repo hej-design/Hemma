@@ -154,6 +154,12 @@ header { display: grid; gap: 14px; }
   border-radius: 8px;
 }
 .btn:hover { filter: brightness(1.08); }
+.buy { display: grid; gap: 10px; }
+.shops { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop { font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
+.shop.pj { background: var(--accent-soft); border-color: transparent; }
+.shop:hover { border-color: var(--accent); }
+.shop:focus-visible { outline: 3px solid var(--part); outline-offset: 2px; }
 a:focus-visible, .btn:focus-visible { outline: 3px solid var(--part); outline-offset: 2px; }
 
 .section { display: grid; gap: 16px; }
@@ -210,7 +216,7 @@ footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 <header>
   <h1>Två trådlösa högtalare som håller ihop</h1>
   <p class="lead">Fyra vita högtalare med cylinderform som kan kopplas ihop två och två. De klarar både hemmet och att följa med ut.</p>
-  <p class="meta">Uppdaterad 20 november 2026 med kraven på vit färg och form. Priserna kan ändras under Black Friday. Tryck på knappen i varje kort för fler bilder och aktuellt pris.</p>
+  <p class="meta">Uppdaterad 20 november 2026 med kraven på vit färg och form. Priserna kan ändras under Black Friday. Varje kort länkar till butiker och till en Prisjakt-sökning på exakt modell, så att ni ser dagens lägsta pris.</p>
   <div class="verdict">
     <p><strong>Rekommendation: två vita Sonos Play.</strong></p>
     <p>Den är bäst på att hålla ihop hemma, eftersom högtalarna förblir aktiva på laddbasen. Ute kan de grupperas via Bluetooth utan wifi. Kreafunk aCOUSTIC är det skandinaviska alternativet som också minns sitt stereopar, men vit finns främst som restlager.</p>
@@ -251,7 +257,10 @@ footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
         <p>Samma formspråk som Roam 2, men större och med stereo i varje högtalare. Hemma står de på laddbasen och förblir aktiva, så stereoparet ska inte brytas av viloläget.</p>
         <div class="facts"><span class="fact">24 h batteri</span><span class="fact">IP67</span><span class="fact">Wifi + Bluetooth</span><span class="fact">Laddbas ingår</span></div>
       </div>
-      <a class="btn" href="https://www.sonos.com/sv-se/shop/sonos-play">Se bilder och pris hos Sonos</a>
+      <div class="buy">
+        <a class="btn" href="https://www.sonos.com/sv-se/shop/sonos-play">Köp hos Sonos</a>
+        <div class="shops"><a class="shop" href="https://www.elgiganten.se/product/tv-ljud-smart-hem/hogtalare-hifi/hogtalare/sonos-play-bluetooth-hogtalare-vit/1045679">Elgiganten</a><a class="shop" href="https://www.inet.se/produkt/6306504/sonos-play-vit">Inet</a><a class="shop pj" href="https://www.prisjakt.nu/search?search=Sonos%20Play%20vit">Prisjakt</a></div>
+      </div>
     </article>
 
     <article class="card">
@@ -271,7 +280,10 @@ footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
         <p>Dansk design med 360 graders ljud i en smal, tygklädd cylinder. Två högtalare återansluter automatiskt i stereo när båda slås på. De kan laddas trådlöst på en Qi-platta. Vit finns bara kvar hos enstaka butiker, och Kreafunk säljer i dag svart och Ivory Sand, en benvit nyans.</p>
         <div class="facts"><span class="fact">30 h batteri</span><span class="fact">IPX5</span><span class="fact">Bara Bluetooth</span><span class="fact">Qi-laddning</span></div>
       </div>
-      <a class="btn" href="https://www.pricerunner.se/pl/267-5166561/Hoegtalare/Kreafunk-aCOUSTIC-priser">Se priser på Pricerunner</a>
+      <div class="buy">
+        <a class="btn" href="https://kreafunk.com/collections/speakers/products/acoustic-limited-edition">Köp hos Kreafunk</a>
+        <div class="shops"><a class="shop" href="https://www.pricerunner.se/pl/267-5166561/Hoegtalare/Kreafunk-aCOUSTIC-priser">Pricerunner</a><a class="shop pj" href="https://www.prisjakt.nu/search?search=Kreafunk%20aCOUSTIC">Prisjakt</a></div>
+      </div>
     </article>
 
     <article class="card">
@@ -291,7 +303,10 @@ footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
         <p>Prisbelönt ljud och IP68, med stereo via JBL-appen och Auracast. Designen är sportigare än Sonos, med tyg och synlig logga. Det är oklart om paret ligger kvar efter avstängning.</p>
         <div class="facts"><span class="fact">14 h batteri</span><span class="fact">IP68</span><span class="fact">Bara Bluetooth</span><span class="fact">560 g</span></div>
       </div>
-      <a class="btn" href="https://www.kjell.com/se/varumarken/jbl/ljud-bild/hogtalare/barbara-hogtalare/jbl-flip-7-portabel-tradlos-hogtalare-vit-p24595">Se bilder hos Kjell &amp; Company</a>
+      <div class="buy">
+        <a class="btn" href="https://www.kjell.com/se/varumarken/jbl/ljud-bild/hogtalare/barbara-hogtalare/jbl-flip-7-portabel-tradlos-hogtalare-vit-p24595">Köp hos Kjell &amp; Company</a>
+        <div class="shops"><a class="shop pj" href="https://www.prisjakt.nu/search?search=JBL%20Flip%207%20vit">Prisjakt</a></div>
+      </div>
     </article>
 
     <article class="card">
@@ -311,7 +326,10 @@ footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
         <p>Samma danska formspråk som aCOUSTIC i mindre format, klädd i återvunnet tyg. Två Karl kan spela i stereo, och den laddas trådlöst på en Qi-platta. Det är oklart om paret återansluter av sig själv efter avstängning.</p>
         <div class="facts"><span class="fact">30 h batteri</span><span class="fact">IPX5</span><span class="fact">Bara Bluetooth</span><span class="fact">360 g</span></div>
       </div>
-      <a class="btn" href="https://www.bygghemma.se/inredning-och-belysning/hemelektronik/ljud-och-hifi/hogtalare/hogtalare-kreafunk-karl-hogtalare-bluetooth-51-qi/p-50002425">Se bilder hos Bygghemma</a>
+      <div class="buy">
+        <a class="btn" href="https://www.bygghemma.se/inredning-och-belysning/hemelektronik/ljud-och-hifi/hogtalare/hogtalare-kreafunk-karl-hogtalare-bluetooth-51-qi/p-50002425">Köp hos Bygghemma</a>
+        <div class="shops"><a class="shop" href="https://kreafunk.com/products/karl">Kreafunk</a><a class="shop pj" href="https://www.prisjakt.nu/search?search=Kreafunk%20Karl">Prisjakt</a></div>
+      </div>
     </article>
 
   </div>
@@ -434,6 +452,8 @@ footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
   <p>Källor</p>
   <ul>
     <li><a href="https://www.sonos.com/sv-se/shop/sonos-play">Sonos Play, pris och innehåll i förpackningen (sonos.com)</a></li>
+    <li><a href="https://www.elgiganten.se/product/tv-ljud-smart-hem/hogtalare-hifi/hogtalare/sonos-play-bluetooth-hogtalare-vit/1045679">Sonos Play vit (Elgiganten)</a></li>
+    <li><a href="https://www.inet.se/produkt/6306504/sonos-play-vit">Sonos Play vit (Inet)</a></li>
     <li><a href="https://www.sonos.com/sv-se/guides/sonosplay">Sonos Play användarguide, batterisparläge (sonos.com)</a></li>
     <li><a href="https://www.sonos.com/en-us/guides/sonosplay">Sonos Play guide, aktiv på laddbasen (sonos.com)</a></li>
     <li><a href="https://rtings.com/speaker/reviews/sonos/play">Sonos Play, cylindrisk form (RTINGS)</a></li>
