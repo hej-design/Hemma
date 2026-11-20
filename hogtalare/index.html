@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Två trådlösa högtalare som håller ihop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+/* Layout: kravrad överst, fyra rangordnade kort i två kolumner, sedan en kravmatris och bortvalda alternativ. Lugn skandinavisk palett. */
+:root {
+  --bg: #f2f4f2;
+  --surface: #ffffff;
+  --ink: #1b2220;
+  --muted: #5a6561;
+  --line: #d6dcd9;
+  --accent: #2c5a5e;
+  --accent-soft: #e3eeee;
+  --ok: #2d7a4c;
+  --ok-bg: #e4f2e8;
+  --part: #9a6a12;
+  --part-bg: #f6eedb;
+  --no: #a8423a;
+  --no-bg: #f6e4e1;
+  --speaker: #ffffff;
+  --speaker-edge: #b9c2be;
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141917;
+    --surface: #1c2321;
+    --ink: #e8ecea;
+    --muted: #9aa6a1;
+    --line: #2e3734;
+    --accent: #7fb7b9;
+    --accent-soft: #23302f;
+    --ok: #7fcf9c;
+    --ok-bg: #1f3327;
+    --part: #e0b25a;
+    --part-bg: #362c19;
+    --no: #ec9188;
+    --no-bg: #3a2220;
+    --speaker: #f4f6f5;
+    --speaker-edge: #6f7a76;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141917;
+  --surface: #1c2321;
+  --ink: #e8ecea;
+  --muted: #9aa6a1;
+  --line: #2e3734;
+  --accent: #7fb7b9;
+  --accent-soft: #23302f;
+  --ok: #7fcf9c;
+  --ok-bg: #1f3327;
+  --part: #e0b25a;
+  --part-bg: #362c19;
+  --no: #ec9188;
+  --no-bg: #3a2220;
+  --speaker: #f4f6f5;
+  --speaker-edge: #6f7a76;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 56px; display: grid; gap: 40px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 400; }
+h1 { font-family: var(--font-display); font-size: clamp(34px, 6vw, 52px); line-height: 1.05; }
+h2 { font-family: var(--font-display); font-size: 30px; line-height: 1.15; }
+h3 { font-family: var(--font-body); font-size: 20px; font-weight: 600; line-height: 1.25; }
+p { margin: 0; max-width: 65ch; }
+.lead { font-size: 18px; color: var(--muted); }
+.meta { font-size: 14px; color: var(--muted); }
+header { display: grid; gap: 14px; }
+
+.verdict {
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 16px 18px;
+  display: grid; gap: 4px;
+}
+.verdict strong { color: var(--accent); font-weight: 600; }
+
+.needs { display: grid; gap: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+.chip.new { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+.cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 14px;
+}
+.card.top { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.rank { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.badge {
+  font-size: 13px; font-weight: 600;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.place { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.visual {
+  height: 128px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  display: grid; place-items: center;
+}
+.visual svg { width: 100%; height: 100%; }
+.visual { position: relative; overflow: hidden; height: 220px; }
+.visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--speaker); }
+.visual img.cover { object-fit: cover; }
+.shape-label { font-size: 13px; color: var(--muted); margin-top: -6px; }
+.price { display: grid; gap: 2px; }
+.price .big { font-family: var(--font-display); font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; }
+.price .small { font-size: 14px; color: var(--muted); }
+.card p { font-size: 15px; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.fact { font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+.btn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+.btn:hover { filter: brightness(1.08); }
+a:focus-visible, .btn:focus-visible { outline: 3px solid var(--part); outline-offset: 2px; }
+
+.section { display: grid; gap: 16px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child th, tr:last-child td { border-bottom: none; }
+thead th { font-size: 14px; font-weight: 600; background: var(--bg); }
+tbody th { font-weight: 600; width: 16%; position: sticky; left: 0; background: var(--surface); }
+td { width: 21%; }
+.pill {
+  display: inline-block;
+  font-size: 12px; font-weight: 600;
+  padding: 2px 8px; border-radius: 999px;
+  margin-bottom: 4px;
+}
+.ok { color: var(--ok); background: var(--ok-bg); }
+.part { color: var(--part); background: var(--part-bg); }
+.no { color: var(--no); background: var(--no-bg); }
+.cell-text { display: block; color: var(--ink); }
+.num { font-variant-numeric: tabular-nums; }
+
+.dropped { display: grid; gap: 10px; }
+.drop {
+  display: grid; grid-template-columns: 200px 1fr; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.drop:last-child { border-bottom: none; }
+.drop strong { font-weight: 600; }
+.drop span { color: var(--muted); font-size: 15px; }
+
+.tips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.tip { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.tip h3 { font-size: 16px; }
+.tip p { font-size: 15px; color: var(--muted); }
+
+footer { display: grid; gap: 8px; font-size: 13px; color: var(--muted); }
+footer a { color: var(--accent); }
+footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+
+@media (max-width: 720px) {
+  .cards, .tips { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .wrap { padding: 24px 16px 48px; gap: 32px; }
+  .drop { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<header>
+  <h1>Två trådlösa högtalare som håller ihop</h1>
+  <p class="lead">Fyra vita högtalare med cylinderform som kan kopplas ihop två och två. De klarar både hemmet och att följa med ut.</p>
+  <p class="meta">Uppdaterad 20 november 2026 med kraven på vit färg och form. Priserna kan ändras under Black Friday. Tryck på knappen i varje kort för fler bilder och aktuellt pris.</p>
+  <div class="verdict">
+    <p><strong>Rekommendation: två vita Sonos Play.</strong></p>
+    <p>Den är bäst på att hålla ihop hemma, eftersom högtalarna förblir aktiva på laddbasen. Ute kan de grupperas via Bluetooth utan wifi. Kreafunk aCOUSTIC är det skandinaviska alternativet som också minns sitt stereopar, men vit finns främst som restlager.</p>
+  </div>
+</header>
+
+<section class="needs" aria-labelledby="krav">
+  <h2 id="krav">Det här ska högtalarna klara</h2>
+  <div class="chips">
+    <span class="chip new">Vit</span>
+    <span class="chip new">Rund, kvadratisk eller cylinder</span>
+    <span class="chip">Trådlös med batteri</span>
+    <span class="chip">Kan kopplas ihop med en till</span>
+    <span class="chip">Förblir ihopkopplade hemma</span>
+    <span class="chip">Fungerar ihop utan wifi</span>
+    <span class="chip">Tål vatten</span>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="topp">
+  <h2 id="topp">De fyra bästa</h2>
+  <div class="cards">
+
+    <article class="card top">
+      <div class="rank"><span class="badge">Bäst helhet</span><span class="place">1 av 4</span></div>
+      <div style="display:grid; gap:8px;">
+        <div class="visual">
+          <img src="https://media.sonos.com/images/znqtjj88/production/8475f628fc4ba407afd0e77f143ca2a666d35e29-2880x1920.jpg?w=900&amp;q=80&amp;fit=clip&amp;auto=format" alt="Vit Sonos Play på sin laddbas bredvid en diskho" class="cover" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">
+          <svg aria-hidden="true" viewBox="0 0 240 128"><rect x="66" y="12" width="46" height="96" rx="20" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><rect x="128" y="12" width="46" height="96" rx="20" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><rect x="60" y="108" width="58" height="7" rx="3.5" fill="var(--speaker-edge)"/><rect x="122" y="108" width="58" height="7" rx="3.5" fill="var(--speaker-edge)"/></svg>
+        </div>
+        <p class="shape-label">Form: upprätt cylinder med oval genomskärning, på laddbas</p>
+      </div>
+      <div>
+        <h3>Sonos Play, vit</h3>
+        <div class="price"><span class="big num">8 146 kr</span><span class="small num">för två: paket 7 408 kr plus två nätadaptrar à 369 kr</span></div>
+      </div>
+      <div style="display:grid; gap:10px;">
+        <p>Samma formspråk som Roam 2, men större och med stereo i varje högtalare. Hemma står de på laddbasen och förblir aktiva, så stereoparet ska inte brytas av viloläget.</p>
+        <div class="facts"><span class="fact">24 h batteri</span><span class="fact">IP67</span><span class="fact">Wifi + Bluetooth</span><span class="fact">Laddbas ingår</span></div>
+      </div>
+      <a class="btn" href="https://www.sonos.com/sv-se/shop/sonos-play">Se bilder och pris hos Sonos</a>
+    </article>
+
+    <article class="card">
+      <div class="rank"><span class="badge">Skandinavisk design</span><span class="place">2 av 4</span></div>
+      <div style="display:grid; gap:8px;">
+        <div class="visual">
+          <img src="https://kreafunk.com/cdn/shop/files/aCOUSTIC2024IvorySandSide.jpg?v=1755069067&amp;width=800" alt="Kreafunk aCOUSTIC i Ivory Sand" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">
+          <svg aria-hidden="true" viewBox="0 0 240 128"><rect x="80" y="16" width="34" height="98" rx="6" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><ellipse cx="97" cy="16" rx="17" ry="5" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><rect x="126" y="16" width="34" height="98" rx="6" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><ellipse cx="143" cy="16" rx="17" ry="5" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/></svg>
+        </div>
+        <p class="shape-label">Form: upprätt cylinder, 7,6 cm bred och 16 cm hög</p>
+      </div>
+      <div>
+        <h3>Kreafunk aCOUSTIC</h3>
+        <div class="price"><span class="big num">ca 2 600–3 000 kr</span><span class="small num">för två: 1 299–1 499 kr styck</span></div>
+      </div>
+      <div style="display:grid; gap:10px;">
+        <p>Dansk design med 360 graders ljud i en smal, tygklädd cylinder. Två högtalare återansluter automatiskt i stereo när båda slås på. De kan laddas trådlöst på en Qi-platta. Vit finns bara kvar hos enstaka butiker, och Kreafunk säljer i dag svart och Ivory Sand, en benvit nyans.</p>
+        <div class="facts"><span class="fact">30 h batteri</span><span class="fact">IPX5</span><span class="fact">Bara Bluetooth</span><span class="fact">Qi-laddning</span></div>
+      </div>
+      <a class="btn" href="https://www.pricerunner.se/pl/267-5166561/Hoegtalare/Kreafunk-aCOUSTIC-priser">Se priser på Pricerunner</a>
+    </article>
+
+    <article class="card">
+      <div class="rank"><span class="badge">Tåligast</span><span class="place">3 av 4</span></div>
+      <div style="display:grid; gap:8px;">
+        <div class="visual">
+          <img src="https://www.kjell.com/cdn-cgi/image/segment=foreground,width=900,format=auto/globalassets/productimages/912844_24595.webp?ref=3861D3E886" alt="Vit JBL Flip 7" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">
+          <svg aria-hidden="true" viewBox="0 0 240 128"><rect x="44" y="26" width="152" height="32" rx="16" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><rect x="44" y="72" width="152" height="32" rx="16" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/></svg>
+        </div>
+        <p class="shape-label">Form: liggande cylinder</p>
+      </div>
+      <div>
+        <h3>JBL Flip 7, vit</h3>
+        <div class="price"><span class="big num">ca 1 980 kr</span><span class="small num">för två: från 990 kr styck hos Kjell &amp; Company just nu</span></div>
+      </div>
+      <div style="display:grid; gap:10px;">
+        <p>Prisbelönt ljud och IP68, med stereo via JBL-appen och Auracast. Designen är sportigare än Sonos, med tyg och synlig logga. Det är oklart om paret ligger kvar efter avstängning.</p>
+        <div class="facts"><span class="fact">14 h batteri</span><span class="fact">IP68</span><span class="fact">Bara Bluetooth</span><span class="fact">560 g</span></div>
+      </div>
+      <a class="btn" href="https://www.kjell.com/se/varumarken/jbl/ljud-bild/hogtalare/barbara-hogtalare/jbl-flip-7-portabel-tradlos-hogtalare-vit-p24595">Se bilder hos Kjell &amp; Company</a>
+    </article>
+
+    <article class="card">
+      <div class="rank"><span class="badge">Minst och billigast</span><span class="place">4 av 4</span></div>
+      <div style="display:grid; gap:8px;">
+        <div class="visual">
+          <img src="https://img.bygghemma.se/82b291fd-85a8-45c6-a9a3-fc233db40eb6/KFRX11.jpg.jpg?auto=format,compress&amp;w=800&amp;h=800&amp;dpr=1&amp;q=60" alt="Kreafunk Karl i Soft White" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">
+          <svg aria-hidden="true" viewBox="0 0 240 128"><rect x="62" y="42" width="50" height="62" rx="8" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><ellipse cx="87" cy="42" rx="25" ry="7" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><rect x="128" y="42" width="50" height="62" rx="8" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/><ellipse cx="153" cy="42" rx="25" ry="7" fill="var(--speaker)" stroke="var(--speaker-edge)" stroke-width="1.5"/></svg>
+        </div>
+        <p class="shape-label">Form: liten upprätt cylinder, Ø 8,5 × 10,3 cm</p>
+      </div>
+      <div>
+        <h3>Kreafunk Karl, mjukvit</h3>
+        <div class="price"><span class="big num">ca 1 620 kr</span><span class="small num">för två: 809 kr styck hos Bygghemma just nu</span></div>
+      </div>
+      <div style="display:grid; gap:10px;">
+        <p>Samma danska formspråk som aCOUSTIC i mindre format, klädd i återvunnet tyg. Två Karl kan spela i stereo, och den laddas trådlöst på en Qi-platta. Det är oklart om paret återansluter av sig själv efter avstängning.</p>
+        <div class="facts"><span class="fact">30 h batteri</span><span class="fact">IPX5</span><span class="fact">Bara Bluetooth</span><span class="fact">360 g</span></div>
+      </div>
+      <a class="btn" href="https://www.bygghemma.se/inredning-och-belysning/hemelektronik/ljud-och-hifi/hogtalare/hogtalare-kreafunk-karl-hogtalare-bluetooth-51-qi/p-50002425">Se bilder hos Bygghemma</a>
+    </article>
+
+  </div>
+</section>
+
+<section class="section" aria-labelledby="matris">
+  <h2 id="matris">Kraven punkt för punkt</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th scope="col">Krav</th><th scope="col">Sonos Play</th><th scope="col">Kreafunk aCOUSTIC</th><th scope="col">JBL Flip 7</th><th scope="col">Kreafunk Karl</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Vit</th>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Finns i vitt, svart och sand</span></td>
+          <td><span class="pill part">Delvis</span><span class="cell-text">Vit finns bara som restlager. Kreafunk säljer i dag svart och Ivory Sand, en benvit nyans.</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Vit är en av sju färger</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Soft White, en mjuk vit nyans</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Rund, kvadratisk eller cylinder</th>
+          <td><span class="pill ok">Cylinder</span><span class="cell-text">Upprätt med oval genomskärning, inte helt rund</span></td>
+          <td><span class="pill ok">Cylinder</span><span class="cell-text">Upprätt, 7,6 cm bred och 16 cm hög</span></td>
+          <td><span class="pill ok">Cylinder</span><span class="cell-text">Liggande cylinder</span></td>
+          <td><span class="pill ok">Cylinder</span><span class="cell-text">Upprätt, Ø 8,5 × 10,3 cm</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Trådlös med batteri</th>
+          <td><span class="pill ok">Ja</span><span class="cell-text num">Upp till 24 timmar</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text num">Upp till 30 timmar</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text num">14 timmar, 16 med Playtime Boost</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text num">Upp till 30 timmar</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Kan kopplas ihop med en till</th>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Stereopar via wifi med en annan Play</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Stereo med en annan aCOUSTIC</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Stereopar med en annan Flip 7 via appen</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Stereo med en annan Karl</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Förblir ihopkopplade hemma</th>
+          <td><span class="pill ok">Ja, på laddbasen</span><span class="cell-text">Sonos skriver att Play förblir aktiv på basen. Det var viloläget som bröt paret på Roam.</span></td>
+          <td><span class="pill ok">Ja, efter omstart</span><span class="cell-text">Enligt manualen återansluter två aCOUSTIC automatiskt i stereo när båda slås på.</span></td>
+          <td><span class="pill part">Oklart</span><span class="cell-text">Inget tydligt besked från JBL om att paret ligger kvar efter avstängning</span></td>
+          <td><span class="pill part">Oklart</span><span class="cell-text">Manualen beskriver hur stereo slås på och av, men inte om paret återansluter efter omstart</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Fungerar ihop utan wifi</th>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Gruppering via Bluetooth, upp till fyra Play eller Move 2</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Bygger helt på Bluetooth</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Bygger helt på Bluetooth</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Bygger helt på Bluetooth</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Tål vatten</th>
+          <td><span class="pill ok">Ja</span><span class="cell-text">IP67</span></td>
+          <td><span class="pill ok">Ja, IPX5</span><span class="cell-text">Tål stänk, men inte att sänkas ner</span></td>
+          <td><span class="pill ok">Ja</span><span class="cell-text">IP68</span></td>
+          <td><span class="pill ok">Ja, IPX5</span><span class="cell-text">Tål stänk, men inte att sänkas ner</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Multiroom hemma</th>
+          <td><span class="pill ok">Ja</span><span class="cell-text">Sonos-systemet och AirPlay 2</span></td>
+          <td><span class="pill no">Nej</span><span class="cell-text">Ingen wifi</span></td>
+          <td><span class="pill no">Nej</span><span class="cell-text">Ingen wifi</span></td>
+          <td><span class="pill no">Nej</span><span class="cell-text">Ingen wifi</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Pris för två</th>
+          <td><span class="cell-text num">8 146 kr inklusive nätadaptrar</span></td>
+          <td><span class="cell-text num">ca 2 600–3 000 kr</span></td>
+          <td><span class="cell-text num">ca 1 980 kr</span></td>
+          <td><span class="cell-text num">ca 1 620 kr</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="tanka">
+  <h2 id="tanka">Att tänka på innan köp</h2>
+  <div class="tips">
+    <div class="tip">
+      <h3>Sonos Play</h3>
+      <p>Nätadapter ingår inte, och Sonos rekommenderar 45 W. När Play inte står på basen stänger batterisparläget av den efter 10 minuter i viloläge, men det går att slå av i appen.</p>
+    </div>
+    <div class="tip">
+      <h3>Kreafunk aCOUSTIC</h3>
+      <p>Den stänger av sig själv efter 60 minuter utan användning, så ni slår på båda när ni vill lyssna. Kreafunks egen butik säljer i dag bara svart och Ivory Sand, så vit finns främst som restlager. Manualen som visar att paret återansluter gäller den ursprungliga aCOUSTIC.</p>
+    </div>
+    <div class="tip">
+      <h3>JBL Flip 7</h3>
+      <p>Den kan inte paras med äldre Flip-modeller, och laddare ingår inte. Formen är ren, men tyget och loggan gör uttrycket mer sportigt än Sonos.</p>
+    </div>
+    <div class="tip">
+      <h3>Kreafunk Karl</h3>
+      <p>Innan ni kopplar ihop två Karl i stereo behöver högtalaren tas bort från telefonens Bluetooth-lista. Den är liten och passar bäst för ett rum. Det är bara här som jag inte har kunnat bekräfta att paret återansluter av sig själv.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="bort">
+  <h2 id="bort">Bortvalda alternativ</h2>
+  <div class="dropped">
+    <div class="drop"><strong>B&amp;O Beosound A1 3rd Gen</strong><span>Rund och vacker, men finns inte i vitt. Närmast är ljust silver.</span></div>
+    <div class="drop"><strong>Harman Kardon Luna 2</strong><span>Cylinder med automatisk stereo när två ställs ihop, men finns i svart och sandfärgat, inte vitt.</span></div>
+    <div class="drop"><strong>UE BOOM 4</strong><span>Cylinder som kan kopplas ihop utan wifi, men den finns inte i vitt.</span></div>
+    <div class="drop"><strong>Bose SoundLink Home</strong><span>Håller ihop bra hemma, men är avlång, inte vit och tål inte vatten.</span></div>
+    <div class="drop"><strong>Sonos Roam 2</strong><span>Triangulär form, och stereoparet bryts när högtalarna går i viloläge.</span></div>
+    <div class="drop"><strong>Sonos Era 100</strong><span>Vit cylinder som håller ihop bäst hemma, men kräver sladd.</span></div>
+    <div class="drop"><strong>Libratone Zipp 2</strong><span>Vit cylinder med stereo och wifi, men den säljs inte längre.</span></div>
+    <div class="drop"><strong>Beats Pill</strong><span>Cylinder med stereoläge, men den finns inte i vitt.</span></div>
+    <div class="drop"><strong>Sonos Move 2</strong><span>Samma möjligheter som Play, men större, tyngre och 5 499 kr styck.</span></div>
+  </div>
+</section>
+
+<footer>
+  <p>Källor</p>
+  <ul>
+    <li><a href="https://www.sonos.com/sv-se/shop/sonos-play">Sonos Play, pris och innehåll i förpackningen (sonos.com)</a></li>
+    <li><a href="https://www.sonos.com/sv-se/guides/sonosplay">Sonos Play användarguide, batterisparläge (sonos.com)</a></li>
+    <li><a href="https://www.sonos.com/en-us/guides/sonosplay">Sonos Play guide, aktiv på laddbasen (sonos.com)</a></li>
+    <li><a href="https://rtings.com/speaker/reviews/sonos/play">Sonos Play, cylindrisk form (RTINGS)</a></li>
+    <li><a href="https://www.smarthomesounds.co.uk/blog/sonos/sonos-play-review">Sonos Play, Bluetooth-gruppering (Smart Home Sounds)</a></li>
+    <li><a href="https://www.tchibo.de/service/documents/275a0d770c900d315038e161a68431c1d246df7c2a427e1bffd65744f172b6b3/anleitung.pdf">aCOUSTIC manual, stereoparet, avstängning och Qi-laddning (Kreafunk via Tchibo)</a></li>
+    <li><a href="https://www.athensproaudio.gr/en/kreafunk-acoustic-white.html">aCOUSTIC vit, mått, batteri och IPX5 (Athens Pro Audio)</a></li>
+    <li><a href="https://www.pricerunner.se/pl/267-5166561/Hoegtalare/Kreafunk-aCOUSTIC-priser">aCOUSTIC, svenska priser (Pricerunner)</a></li>
+    <li><a href="https://kreafunk.com/collections/speakers/products/acoustic-limited-edition">aCOUSTIC, färger som säljs i dag (kreafunk.com)</a></li>
+    <li><a href="https://kreafunk.com/products/karl">Kreafunk Karl, färger och specifikationer (kreafunk.com)</a></li>
+    <li><a href="https://www.bygghemma.se/inredning-och-belysning/hemelektronik/ljud-och-hifi/hogtalare/hogtalare-kreafunk-karl-hogtalare-bluetooth-51-qi/p-50002425">Kreafunk Karl, pris och mått (Bygghemma)</a></li>
+    <li><a href="https://www.wayfair.co.uk/furniture/pdp/kreafunk-karl-bluetooth-speaker-soft-white-u110969850.html">Kreafunk Karl Soft White, stereo och IPX5 (Wayfair)</a></li>
+    <li><a href="https://www.mwave.com.au/products/kreafunk-karl-bluetooth-speaker-soft-white-ac97113">Kreafunk Karl, batteri, vikt och trådlös laddning (Mwave)</a></li>
+    <li><a href="https://manuals.plus/m/0e35dc8b5ec6bbf73871911b846e6a401bf9d4040b68870f4827703aba617f91">Kreafunk Karl manual, stereoläge (manuals.plus)</a></li>
+    <li><a href="https://www.whathifi.com/speakers/wireless-speakers/jbl-flip-7">JBL Flip 7, specifikationer och färger (What Hi-Fi?)</a></li>
+    <li><a href="https://www.soundguys.com/how-to-fix-jbl-flip-7-134026/">JBL Flip 7, stereoläge i appen (SoundGuys)</a></li>
+    <li><a href="https://www.kjell.com/se/varumarken/jbl/ljud-bild/hogtalare/barbara-hogtalare/jbl-flip-7-portabel-tradlos-hogtalare-vit-p24595">JBL Flip 7 vit, pris (Kjell &amp; Company)</a></li>
+    <li><a href="https://www.whathifi.com/speakers/wireless-speakers/harman-kardon-luna-2">Harman Kardon Luna 2 (What Hi-Fi?)</a></li>
+    <li><a href="https://www.t3.com/tech/audio/my-fave-bang-olufsen-bluetooth-speaker-returns-in-beosound-a1-3rd-gen-upgrade">Beosound A1 3rd Gen, färger (T3)</a></li>
+    <li><a href="https://comparisontabl.es/bluetooth-speakers/ue-boom-4">UE BOOM 4, färger (comparisontabl.es)</a></li>
+    <li><a href="https://www.coolblue.nl/en/product/822091/libratone-zipp-2-gray.html">Libratone Zipp 2, utgången (Coolblue)</a></li>
+    <li><a href="https://www.macrumors.com/2025/04/28/beats-pill-navy-blue-blush-pink/">Beats Pill, färger (MacRumors)</a></li>
+  </ul>
+</footer>
+
+</main>
+</body>
+</html>
