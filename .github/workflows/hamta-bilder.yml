@@ -1,0 +1,56 @@
+name: Hämta produktbilder till högtalarsidan
+
+on:
+  push:
+    branches: [hogtalare-fler]
+    paths: [".github/workflows/hamta-bilder.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  hamta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hogtalare-fler
+      - name: Ladda ner bilder och kontrollera butikssidor
+        run: |
+          mkdir -p hogtalare/bilder
+          UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          hamta() {
+            namn="$1"; url="$2"
+            case "$url" in //*) url="https:$url" ;; esac
+            echo "Försöker $namn: $url"
+            curl -fsSL -A "$UA" -o "hogtalare/bilder/$namn.img" "$url" || { echo "misslyckades"; rm -f "hogtalare/bilder/$namn.img"; }
+          }
+          ogbild() {
+            curl -fsSL -A "$UA" "$1" 2>/dev/null | grep -oE '<meta[^>]+og:image[^>]+>' | grep -oE 'content="[^"]+"' | head -1 | sed 's/content="//;s/"$//' | sed 's/&amp;/\&/g'
+          }
+          n=0
+          for sida in \
+            "https://store.google.com/se/product/google_home_speaker?hl=sv" \
+            "https://www.proshop.dk/Smart-Home/Google-Home-Speaker-Porcelain/3482393" \
+            "https://www.digitaltrends.com/home-theater/google-home-speaker-review/"; do
+            n=$((n+1)); u=$(ogbild "$sida"); [ -n "$u" ] && hamta "google-kandidat-$n" "$u"
+          done
+          n=0
+          for sida in \
+            "https://www.elgiganten.dk/product/tv-lyd-smart-home/hojtalere-hi-fi/hojttalere/wiim-sound-lite-white/1037796" \
+            "https://www.richersounds.com/wiim-sound-lite-white/" \
+            "https://www.coolblue.nl/en/product/977884/wiim-sound-lite-white.html" \
+            "https://www.techradar.com/audio/wireless-bluetooth-speakers/wiim-just-unveiled-the-ultimate-sonos-era-100-rival-meet-the-hi-res-sound-lite"; do
+            n=$((n+1)); u=$(ogbild "$sida"); [ -n "$u" ] && hamta "wiim-kandidat-$n" "$u"
+          done
+          echo "=== Elgiganten SE, vit WiiM Sound Lite ==="
+          curl -sL -A "$UA" -o /tmp/eg.html -w "HTTP %{http_code} %{url_effective}\n" "https://www.elgiganten.se/product/tv-ljud-smart-hem/hogtalare-hifi/hogtalare/wiim-sound-lite-white/1037796"
+          grep -oE '"price"[^,]{0,40}|"amount"[^,]{0,30}|<title>[^<]+' /tmp/eg.html | head -8 || true
+          file hogtalare/bilder/*-kandidat-* || true
+      - name: Spara bilderna i grenen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hogtalare/bilder
+          git commit -m "Lägg till bildkandidater för nya högtalare" || echo "Inga nya bilder"
+          git push origin hogtalare-fler
