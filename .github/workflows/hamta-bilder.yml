@@ -31,8 +31,9 @@ jobs:
           kor() {
             prefix="$1"; shift; n=0
             for sida in "$@"; do
-              n=$((n+1)); u=$(ogbild "$sida"); echo "og $prefix-$n: $u"; [ -n "$u" ] && hamta "$prefix-$n" "$u"
+              n=$((n+1)); u=$(ogbild "$sida" || true); echo "og $prefix-$n: $u"; if [ -n "$u" ]; then hamta "$prefix-$n" "$u"; fi
             done
+            return 0
           }
           kor denon \
             "https://www.denon.com/en-gb/product/wireless-speakers/denon-home-150/DENONHOME150GB.html" \
@@ -55,5 +56,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add hogtalare/bilder
-          git commit -m "Lägg till bildkandidater för nya högtalare" || echo "Inga nya bilder"
+          git commit -m "Lägg till bildkandidater för Denon, B&O och Samsung" || echo "Inga nya bilder"
           git push origin hogtalare-svart-ok
