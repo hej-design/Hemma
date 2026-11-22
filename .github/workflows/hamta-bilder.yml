@@ -1,0 +1,59 @@
+name: Hämta produktbilder till högtalarsidan
+
+on:
+  push:
+    branches: [hogtalare-svart-ok]
+    paths: [".github/workflows/hamta-bilder.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  hamta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hogtalare-svart-ok
+      - name: Ladda ner bilder
+        run: |
+          mkdir -p hogtalare/bilder
+          UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          hamta() {
+            namn="$1"; url="$2"
+            case "$url" in //*) url="https:$url" ;; esac
+            echo "Försöker $namn: $url"
+            curl -fsSL -A "$UA" -o "hogtalare/bilder/$namn.img" "$url" || { echo "misslyckades"; rm -f "hogtalare/bilder/$namn.img"; }
+          }
+          ogbild() {
+            curl -fsSL -A "$UA" "$1" 2>/dev/null | grep -oE '<meta[^>]+og:image[^>]+>' | grep -oE 'content="[^"]+"' | head -1 | sed 's/content="//;s/"$//' | sed 's/&amp;/\&/g'
+          }
+          kor() {
+            prefix="$1"; shift; n=0
+            for sida in "$@"; do
+              n=$((n+1)); u=$(ogbild "$sida"); echo "og $prefix-$n: $u"; [ -n "$u" ] && hamta "$prefix-$n" "$u"
+            done
+          }
+          kor denon \
+            "https://www.denon.com/en-gb/product/wireless-speakers/denon-home-150/DENONHOME150GB.html" \
+            "https://www.auditorium.de/en/speakers/speakers/smart-speakers/denon-home-150-white" \
+            "https://en.homecinesolutions.fr/p/19739-denon-home-150-white" \
+            "https://www.bestbuy.com/product/denon-home-150-wireless-speaker-with-heos-built-in-airplay-2-and-bluetooth-white/6413146"
+          kor explore \
+            "https://petertyson.co.uk/bang-olufsen-beosound-explore" \
+            "https://shop.roughtrade.com/products/beosound-explore-black-anthracite" \
+            "https://www.wexphotovideo.com/bang-olufsen-beosound-explore-black-anthracite-bt-speaker-3100071/" \
+            "https://www.alza.sk/EN/bang-olufsen-beosound-explore-black-anthracite-d6541369.htm"
+          kor samsung \
+            "https://www.samsung.com/se/audio-devices/wireless-speaker/ls51h-white-hw-ls51h-xe/" \
+            "https://www.samsung.com/sg/audio-devices/wireless-speaker/ls51h-white-hw-ls51h-xs/" \
+            "https://www.komplett.no/product/1336771/tv-lyd-bilde/lydplanker/samsung-music-studio-5" \
+            "https://www.coolblue.de/en/product/981854/samsung-music-studio-5-duo-pack-black.html"
+          file hogtalare/bilder/*.img || true
+      - name: Spara bilderna i grenen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hogtalare/bilder
+          git commit -m "Lägg till bildkandidater för nya högtalare" || echo "Inga nya bilder"
+          git push origin hogtalare-svart-ok
