@@ -1,0 +1,41 @@
+name: Hämta produktbild till högtalarsidan
+
+on:
+  push:
+    branches: [hogtalare-enchant]
+    paths: [".github/workflows/hamta-bilder.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  hamta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hogtalare-enchant
+      - name: Ladda ner bild och hitta Elons produktlänk
+        run: |
+          mkdir -p hogtalare/bilder
+          UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          hamta() {
+            echo "Försöker $1: $2"
+            curl -fsSL -A "$UA" -o "hogtalare/bilder/$1.img" "$2" || { echo "misslyckades"; rm -f "hogtalare/bilder/$1.img"; }
+            return 0
+          }
+          hamta hk-1 "https://support.harmanaudio.com/dw/image/v2/BFND_PRD/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw503731ce/01.HK_Enchant_Speaker_Black_Hero.png?sw=960&sh=960"
+          u=$(curl -fsSL -A "$UA" "https://www.harmankardon.se/enchant-series/ENCHANT-SPEAKER.html" 2>/dev/null | grep -oE '<meta[^>]+og:image[^>]+>' | grep -oE 'content="[^"]+"' | head -1 | sed 's/content="//;s/"$//;s/&amp;/\&/g' || true)
+          echo "og: $u"
+          if [ -n "$u" ]; then hamta hk-2 "$u"; fi
+          echo "=== Elon-länkar ==="
+          curl -fsSL -A "$UA" "https://www.elon.se/varumarken/harman-kardon" 2>/dev/null | grep -oiE 'href="[^"]*enchant[^"]*"' | sort -u | head -10 || true
+          curl -fsSL -A "$UA" "https://www.elon.se/ljud/hogtalare/multiroom-hogtalare" 2>/dev/null | grep -oiE 'href="[^"]*enchant[^"]*"' | sort -u | head -10 || true
+          file hogtalare/bilder/*.img || true
+      - name: Spara bilderna i grenen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hogtalare/bilder
+          git commit -m "Lägg till bildkandidater för Harman Kardon Enchant Speaker" || echo "Inga nya bilder"
+          git push origin hogtalare-enchant
